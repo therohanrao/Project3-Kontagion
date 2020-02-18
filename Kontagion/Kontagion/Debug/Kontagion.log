@@ -1,0 +1,6 @@
+﻿  Actor.cpp
+C:\Users\rohan\source\CS32repos\Kontagion\Kontagion\Actor.cpp(189,11): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\rohan\source\CS32repos\Kontagion\Kontagion\Actor.cpp(190,11): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  StudentWorld.cpp
+  Generating Code...
+  Kontagion.vcxproj -> C:\Users\rohan\source\CS32repos\Kontagion\Debug\Kontagion.exe
