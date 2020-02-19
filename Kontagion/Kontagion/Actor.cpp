@@ -132,6 +132,7 @@ void setDirection(Direction d); // in degrees (0-359)
             x += VIEW_WIDTH / 2;
             y += VIEW_HEIGHT / 2;
             moveTo(x, y);
+            m_counter++;
 
             break;
 
@@ -143,6 +144,7 @@ void setDirection(Direction d); // in degrees (0-359)
             x += VIEW_WIDTH / 2;
             y += VIEW_HEIGHT / 2;
             moveTo(x, y);
+            m_counter--;
 
             break;
 
@@ -159,7 +161,9 @@ void setDirection(Direction d); // in degrees (0-359)
         std::cout << "DIR" << getDirection() << std::endl;
         std::cout << "THETA: " << m_theta << std::endl;
         std::cout << "X: " << x << std::endl;
-        std::cout << "Y: " << y << std::endl << std::endl;
+        std::cout << "Y: " << y << std::endl;
+        std::cout << "Counter: " << m_counter << std::endl << std::endl;
+
     }
 
 

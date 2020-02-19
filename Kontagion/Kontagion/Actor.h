@@ -55,6 +55,8 @@ public:
 		m_dead = false;
 	}
 
+	//all depths are 1 EXCEPT socrates and bacteria//
+
 	//reference to studentWorld for actors
 
 	StudentWorld* getWorld() { return  m_studentWorld; }
@@ -84,7 +86,7 @@ class Socrates : public Actor
 public:
 
 	Socrates(StudentWorld* world)
-		: Actor(world, IID_PLAYER, 0, 128, 1) //ImageID:Player x:0, y:128, depth:1
+		: Actor(world, IID_PLAYER, 0, 128, 0, 0) //ImageID:Player x:0, y:128, dir: 0, depth:0
 	{
 		setHealth(100);
 		m_sprayCharge = 20;
@@ -127,7 +129,7 @@ private:
 	int m_sprayCharge;
 	int m_flameCharge;
 
-	//need gameWorld pointer??
+	int m_counter = 0;
 
 };
 
