@@ -55,6 +55,8 @@ public:
 		m_dead = false;
 	}
 
+	//all depths are 1 EXCEPT socrates and bacteria//
+
 	//reference to studentWorld for actors
 
 	StudentWorld* getWorld() { return  m_studentWorld; }
@@ -64,7 +66,13 @@ public:
 	virtual void activate();
 
 	virtual void setDead(bool state);
-	virtual bool isDead() const;
+	virtual bool isDead() const = 0;
+
+	//virtual bool canHurt();
+
+
+
+	void polarToCartesian(int& x, int& y, int theta, int r = VIEW_RADIUS);
 
 private:
 	bool m_dead;
@@ -84,13 +92,18 @@ class Socrates : public Actor
 public:
 
 	Socrates(StudentWorld* world)
-		: Actor(world, IID_PLAYER, 0, 128, 1) //ImageID:Player x:0, y:128, depth:1
+		: Actor(world, IID_PLAYER, 0, 128, 0, 0) //ImageID:Player x:0, y:128, dir: 0, depth:0
 	{
 		setHealth(100);
 		m_sprayCharge = 20;
+		m_rechargeDelay = false;
 		m_flameCharge = 5;
 		setTheta();
 	}
+
+	// A NOTE ABOUT DEPTH:
+	//In Kontagion, all bacteria AND Socrates are at DEPTH 0, and ALL OTHER GAME ACTORS are at DEPTH
+	//	1, ensuring our active characters are in the foreground.
 
 	virtual void doSomething();
 
@@ -106,7 +119,7 @@ public:
 		m_health = health;
 	}
 
-	bool isDead() const
+	virtual bool isDead() const
 	{
 		if (m_health == 0)
 			return true;
@@ -115,7 +128,12 @@ public:
 
 	void setTheta();
 
-	void polarToCartesian(int& x, int& y, int theta, int r = VIEW_RADIUS);
+	int getTheta() const
+	{
+		return m_theta;
+	}
+
+	void printStats(int x, int y);
 
 private:
 
@@ -125,9 +143,10 @@ private:
 
 	Direction m_direction;
 	int m_sprayCharge;
+	bool m_rechargeDelay;
 	int m_flameCharge;
 
-	//need gameWorld pointer??
+	int m_counter = 0;
 
 };
 
@@ -145,10 +164,15 @@ class DirtPile :
 {
 public:
 
-	DirtPile(StudentWorld* world, double startX, double startY)
-		: Actor(world, IID_DIRT, startX, startY, 0, 1) //ImageID:Player, ..., dir:0, depth:1
+	DirtPile(StudentWorld* world, double startX, double startY, Direction dir = 0)
+		: Actor(world, IID_DIRT, startX, startY, dir, 1) //ImageID: Spray, ..., dir:0, depth:1
 	{
 
+	}
+
+	virtual bool isDead() const
+	{
+		return false;
 	}
 
 	virtual void doSomething();
@@ -166,9 +190,48 @@ private:
 /////////////////SPRAY CLASS DECLARATION////////////////////
 ////////////////////////////////////////////////////////////
 
-class Spray : public Actor
-{
+////////////////////////////////////////////////////////////
+/////////////////PROJECTILE BASE CLASS DECLARATION//////////
+////////////////////////////////////////////////////////////
 
+class Projectile : public Actor
+{
+public:
+	Projectile(StudentWorld* world, int ImageID,  double startX, double startY, int dir, int range)
+		: Actor(world, ImageID, startX, startY, dir) // depth:0
+	{
+		m_distanceLeft = range; //max pixels a projectile will travel
+	}
+
+	void move();
+
+	virtual bool isDead() const
+	{
+		if (m_distanceLeft > 0)
+			return false;
+		return true;
+	}
+
+	virtual void doSomething()
+	{
+		move();
+	}
+private:
+	int m_distanceLeft;
+};
+
+////////////////////////////////////////////////////////////
+/////////////////END DECLARATION////////////////////////////
+////////////////////////////////////////////////////////////
+
+class Spray : public Projectile
+{
+public:
+	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112)
+		: Projectile(world, IID_SPRAY, startX, startY, dir, range) //ImageID: Spray, ..., range: 112
+	{}
+
+	//virtual void doSomething();
 };
 
 ////////////////////////////////////////////////////////////
@@ -180,9 +243,15 @@ class Spray : public Actor
 /////////////////FLAME CLASS DECLARATION////////////////////
 ////////////////////////////////////////////////////////////
 
-class Flame : public Actor
+class Flame : public Projectile
 {
+public:
+	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32)
+		: Projectile(world, IID_FLAME, startX, startY, dir, range) //ImageID: Flame, ..., range: 32
+	{}
 
+	//virtual void doSomething();
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -196,7 +265,17 @@ class Flame : public Actor
 
 class Pit : public Actor
 {
+public:
+	Pit(StudentWorld* world, double startX, double startY, int dir)
+		: Actor(world, IID_SPRAY, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething();
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -210,7 +289,17 @@ class Pit : public Actor
 
 class Bacteria : public Actor
 {
+public:
+	Bacteria(StudentWorld* world, int imageID, double startX, double startY, int dir)
+		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -224,7 +313,17 @@ class Bacteria : public Actor
 
 class Salmonella : public Bacteria
 {
+public:
+	Salmonella(StudentWorld* world, double startX, double startY, int dir)
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething();
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -238,7 +337,17 @@ class Salmonella : public Bacteria
 
 class AggroSalmonella : public Bacteria
 {
+public:
+	AggroSalmonella(StudentWorld* world, double startX, double startY, int dir)
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething();
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -252,7 +361,17 @@ class AggroSalmonella : public Bacteria
 
 class EColi : public Bacteria
 {
+public:
+	EColi(StudentWorld* world, double startX, double startY, int dir)
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething();
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -266,7 +385,17 @@ class EColi : public Bacteria
 
 class Consumable : public Actor
 {
+public:
+	Consumable(StudentWorld* world, int imageID, double startX, double startY, int dir)
+		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -280,7 +409,17 @@ class Consumable : public Actor
 
 class Food : public Consumable
 {
+public:
+	Food(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_FOOD, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -294,7 +433,17 @@ class Food : public Consumable
 
 class FlameG : public Consumable
 {
+public:
+	FlameG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_FLAME_THROWER_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -308,7 +457,17 @@ class FlameG : public Consumable
 
 class HealthG : public Consumable
 {
+public:
+	HealthG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_RESTORE_HEALTH_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -322,7 +481,17 @@ class HealthG : public Consumable
 
 class LifeG : public Consumable
 {
+public:
+	LifeG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_EXTRA_LIFE_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -336,7 +505,17 @@ class LifeG : public Consumable
 
 class Fungus : public Consumable
 {
+public:
+	Fungus(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_FUNGUS, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
 
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
 };
 
 #endif // ACTOR_H_

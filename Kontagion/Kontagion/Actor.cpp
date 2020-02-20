@@ -15,11 +15,18 @@ void Actor::setDead(bool state)
 	m_dead = state;
 }
 
-bool Actor::isDead() const
+/*bool Actor::isDead() const
 {
 	if (m_dead)
 		return true;
 	return false;
+}*/
+
+void Actor::polarToCartesian(int& x, int& y, int theta, int r)
+{
+    double rad = theta * (PI / 180);
+    x = r * (cos(rad));
+    y = r * (sin(rad));
 }
 
 
@@ -86,13 +93,6 @@ Introduce a new Spray object into the Petri dish in front
 GraphObject(int imageID, double startX, double startY,
 int startDirection = 0, int depth = 0);
 
-// A NOTE ABOUT DEPTH:
-
-In
-Kontagion, all bacteria and Socrates are at depth 0, and all other game actors are at depth
-1, ensuring our active characters are in the foreground.
-//
-
 double getX() const; // in pixels (0-255)
 double getY() const; // in pixels (0-255)
 void moveTo(double x, double y); // in pixels (0-255)
@@ -116,11 +116,16 @@ void setDirection(Direction d); // in degrees (0-359)
 */
 
 
-    int ch;
+    int ch = 0;
     if (getWorld()->getKey(ch))
     {
         int x = 0;
+        double dx = 0;
         int y = 0;
+        double dy = 0;
+
+        Spray* spray = nullptr;
+        Flame* flame = nullptr;
         switch (ch)
         {
 
@@ -132,6 +137,9 @@ void setDirection(Direction d); // in degrees (0-359)
             x += VIEW_WIDTH / 2;
             y += VIEW_HEIGHT / 2;
             moveTo(x, y);
+            m_counter--;
+
+            printStats(x, y);
 
             break;
 
@@ -143,27 +151,48 @@ void setDirection(Direction d); // in degrees (0-359)
             x += VIEW_WIDTH / 2;
             y += VIEW_HEIGHT / 2;
             moveTo(x, y);
+            m_counter++;
+
+            printStats(x, y);
 
             break;
 
         case KEY_PRESS_SPACE:
+            if (m_sprayCharge >= 1)
+            {
+                getPositionInThisDirection(getDirection(), SPRITE_WIDTH, dx, dy);
+                printStats(x, y);
+                std::cerr << dx << " " << dy << std::endl;;
+                getWorld()->addNewActor(spray, getWorld(), dx, dy, getDirection());
+                getWorld()->playSound(SOUND_PLAYER_SPRAY);
+                m_sprayCharge--;
+            }
+            m_rechargeDelay = true;
+
             break;
 
         case KEY_PRESS_ENTER:
+            if (m_flameCharge >= 1)
+            {
+                for (int i = 0; i < 338; i += 22)
+                {
+                    getPositionInThisDirection(getDirection() + i, SPRITE_WIDTH, dx, dy);
+                    getWorld()->addNewActor(flame, getWorld(), dx, dy, getDirection() + i);
+                }
+                getWorld()->playSound(SOUND_PLAYER_FIRE);
+                //m_flameCharge--; UNCOMMENT THIS LATER!!!!!
+            }
             break;
 
         default:
             break;
         }
-
-        std::cout << "DIR" << getDirection() << std::endl;
-        std::cout << "THETA: " << m_theta << std::endl;
-        std::cout << "X: " << x << std::endl;
-        std::cout << "Y: " << y << std::endl << std::endl;
     }
+    else if (m_sprayCharge < 20 && !m_rechargeDelay)
+        m_sprayCharge++;
+    m_rechargeDelay = false;
 
-
-
+    //std::cerr << "SprayCharge: " << m_sprayCharge << std::endl << std::endl;
 }
 
 void Socrates::takeDamage()
@@ -183,13 +212,14 @@ void Socrates::setTheta()
         std::cerr << "INVALID DIR SET" << std::endl;
 }
 
-void Socrates::polarToCartesian(int& x, int& y, int theta, int r)
+void Socrates::printStats(int x, int y)
 {
-    double rad = theta * (PI / 180);
-    x = r * (cos(rad));
-    y = r * (sin(rad));
+    std::cerr << "DIR" << getDirection() << std::endl;
+    std::cerr << "THETA: " << m_theta << std::endl;
+    std::cerr << "X: " << x << std::endl;
+    std::cerr << "Y: " << y << std::endl;
+    std::cerr << "Counter: " << m_counter << std::endl;
 }
-
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
@@ -210,14 +240,93 @@ void DirtPile::doSomething()
 
 
 ////////////////////////////////////////////////////////////
+/////////////////PROJECTILE CLASS IMPLEMENTATION////////////
+////////////////////////////////////////////////////////////
+
+void Projectile::move()
+{
+    moveAngle(getDirection(), SPRITE_WIDTH);
+    m_distanceLeft -= SPRITE_WIDTH;
+    //std::cerr << "distLeft: " << m_distanceLeft << std::endl;
+}
+
+////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////
+/////////////////SPRAY CLASS IMPLEMENTATION/////////////////
+////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////
+/////////////////FLAME CLASS IMPLEMENTATION/////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+
+void Pit::doSomething()
+{
+
+}
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+
+void Salmonella::doSomething()
+{
+
+}
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+void AggroSalmonella::doSomething()
+{
+
+}
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+
+void EColi::doSomething()
+{
+
+}
 
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////

@@ -113,11 +113,25 @@ etc.).
 
     m_socrates->doSomething();
 
+    list<Actor*>::iterator actorsIt;
+
+    for (actorsIt = m_actors.begin(); actorsIt != m_actors.end(); ) // notice: no it++
+    {
+        (*actorsIt)->doSomething(); //call all doSomething for actors
+        if ((*actorsIt)->isDead()) //check if dead
+        {
+            delete* actorsIt; //if so, delete
+            actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
+            std::cerr << "killed something" << endl;
+        }
+        else actorsIt++; // otherwise go to next pointer in list
+    }
+
     int input;
 
     getKey(input);
 
-    if (input == KEY_PRESS_SPACE)
+    if (input == KEY_PRESS_DOWN)
     {
         decLives();
         return GWSTATUS_PLAYER_DIED;
@@ -178,7 +192,7 @@ void StudentWorld::addDirt()
         xPos = randInt(0, VIEW_WIDTH);
         yPos = randInt(0, VIEW_HEIGHT);
 
-        if (distFromCenter(xPos, yPos) > 120.0) //gets random number within dist
+        if (distApart(xPos, yPos) > 120.0) //gets random number within dist
             continue;
 
         m_actors.push_back(new DirtPile(this, xPos, yPos));
@@ -198,19 +212,31 @@ object must be no more 120 pixels from the center of the Petri dish which is at
 
 }
 
-double StudentWorld::distFromCenter(int x, int y) const //returns the absval dist between center and passed coord
+double StudentWorld::distApart(int x1, int y1, int x2, int y2) const //returns the dist between passed coords or center
 {
-    int xDist = abs(x - m_centerX);
-    int yDist = abs(y - m_centerY);
+    int xDist = abs(x1 - x2);
+    int yDist = abs(y1 - y2);
 
     double absDist = sqrt(pow(xDist, 2) + pow(yDist, 2));
 
-    //cout << "x: " << x << endl << "y: " << y << endl;
-    //cout << xDist << endl;
-    //cout << yDist << endl;
-    //cout << absDist << endl;
-
     return absDist;
+}
+
+
+bool StudentWorld::overlap(Actor* a1)
+{
+    list<Actor*>::iterator it;
+    it = m_actors.begin();
+
+    while (it != m_actors.end()) // notice: no it++
+    {
+        if (distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= SPRITE_WIDTH)
+            return true;
+        it++;
+    }
+    return false;
+
+
 }
 
 
