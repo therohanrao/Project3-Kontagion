@@ -1,9 +1,11 @@
-#include "StudentWorld.h"
-#include "GameConstants.h"
-#include "Actor.h"
+
 #include <string>
 #include <cmath>
 #include <cassert>
+
+#include "StudentWorld.h"
+#include "GameConstants.h"
+#include "Actor.h"
 
 using namespace std;
 
@@ -65,6 +67,7 @@ as described below.
 the Petri dish; this is in the left-middle of the dish.
     */
     m_socrates = new Socrates(this);
+    m_overlapActorIt = m_actors.end();
 
     addPits();
     addFood();
@@ -130,6 +133,7 @@ etc.).
 
     m_socrates->doSomething(); //must be after all object's doSomething()!!!
 
+    addFungus();
     addGoodies();
 
     int input;
@@ -228,23 +232,61 @@ double StudentWorld::distApart(int x1, int y1, int x2, int y2) const //returns t
 }
 
 
-bool StudentWorld::overlap(Actor* a1)
+bool StudentWorld::overlap(Actor* a1, int overlapDist)
 {
     list<Actor*>::iterator it;
     it = m_actors.begin();
 
+    //if no arguments, use overlap on socrates
+    if (a1 == nullptr)
+        a1 = m_socrates;
+
+    int k = 0;
+
     while (it != m_actors.end()) // notice: no it++
     {
-        if (distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= SPRITE_WIDTH)
-            return true;
-        it++;
-    }
-    return false;
+        if (a1 != *it && distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= overlapDist)
+        {
+            m_overlapActorIt = it;
+            //cerr << "OKAY: " << k << endl;
+            //cerr << "OKAY2: " << a1->getX() << endl;
+            //cerr << "OKAY3: " << (*it)->getX() << endl;
 
+            return true;
+        }
+        it++;
+        k++;
+    }
+    m_overlapActorIt = it;
+    return false;
 
 }
 
-void StudentWorld::addGoodies()
+bool StudentWorld::dirtOverlap(Actor* p)
+{
+    if (true);
+
+    return true;
+}
+
+bool StudentWorld::projectileOverlap(Projectile* p)
+{
+    if (overlap(p) && (*m_overlapActorIt)->destructible())
+    {
+        (*m_overlapActorIt)->takeDamage(p->damageGiven());
+        return true;
+    }
+    return false;
+}
+
+bool StudentWorld::bacteriaOverlap(Bacteria* b)
+{
+    if (true);
+
+    return true;
+}
+
+void StudentWorld::addFungus()
 {
     int chanceFungus = max(510 - getLevel() * 10, 200);
     bool spawnFungus = randInt(0, chanceFungus);
@@ -260,6 +302,32 @@ void StudentWorld::addGoodies()
         m_actors.push_back(new Fungus(this, x, y));
     }
 
+}
+
+void StudentWorld::addGoodies()
+{
+    int chanceGoodie = max(510 - getLevel() * 10, 250);
+    bool spawnGoodie = randInt(0, chanceGoodie);
+
+   if (!spawnGoodie) //HAVEN"T DONE TIMER FOR DEATH OF GOODIE
+    {
+
+        int x = 0;
+        int y = 0;
+        int theta = randInt(0, 369);
+        m_socrates->polarToCartesian(x, y, theta);
+        x += VIEW_WIDTH / 2;
+        y += VIEW_HEIGHT / 2;
+
+        int goodieType = randInt(0, 9);
+
+        if (goodieType == 0)
+            m_actors.push_back(new LifeG(this, x, y));
+        else if (goodieType <= 3)
+            m_actors.push_back(new FlameG(this, x, y));
+        else
+            m_actors.push_back(new HealthG(this, x, y));
+    }
 }
 //  GAMEWORLD FUNCTIONS? HERE:
 /*

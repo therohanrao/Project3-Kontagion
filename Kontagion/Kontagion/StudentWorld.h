@@ -1,15 +1,17 @@
 #ifndef STUDENTWORLD_H_
 #define STUDENTWORLD_H_
 
-#include "GameWorld.h"
 #include <string>
 #include <list>
 
+#include "GameWorld.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
 class Actor;
 class Socrates;
+class Bacteria;
+class Projectile;
 
 class StudentWorld : public GameWorld
 {
@@ -25,7 +27,7 @@ public:
     //x2 & y2 set to center of circle default
     double distApart(int x1, int y1, int x2 = VIEW_WIDTH/2, int y2 = VIEW_HEIGHT/2) const;
 
-    bool overlap(Actor* a1);
+    bool overlap(Actor* a1 = nullptr, int overlapDist = SPRITE_WIDTH);
     
     //GODLY:
     template<typename ActorType>
@@ -36,6 +38,9 @@ public:
         std::cerr << "new actor added..." << std::endl;
     }
 
+    bool dirtOverlap(Actor* d);
+    bool projectileOverlap(Projectile* p);
+    bool bacteriaOverlap(Bacteria* b);
 
 private:
 
@@ -45,12 +50,15 @@ private:
     void addDirt();
     void addFood();
 
+    void addFungus();
     void addGoodies();
-
 
     Socrates* m_socrates;
 
     std::list<Actor*> m_actors;
+
+    std::list<Actor*>::iterator m_overlapActorIt;
+
     int m_numActors;
 
     const int m_centerX = VIEW_WIDTH/2;

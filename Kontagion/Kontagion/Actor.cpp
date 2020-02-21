@@ -226,6 +226,13 @@ void DirtPile::doSomething()
 
 }
 
+bool DirtPile::overlap()
+{
+    if (getWorld()->dirtOverlap(this))
+        setDead();
+    return true;
+}
+
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
@@ -244,6 +251,16 @@ void Projectile::move()
     }
 
     //std::cerr << "distLeft: " << m_distanceLeft << std::endl;
+}
+
+bool Projectile::overlap()
+{
+    if (getWorld()->projectileOverlap(this))
+    {
+        setDead();
+        return true;
+    }
+    return false;
 }
 
 ////////////////////////////////////////////////////////////

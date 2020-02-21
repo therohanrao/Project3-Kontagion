@@ -63,22 +63,32 @@ public:
 
 	virtual void doSomething() = 0;
 
-	virtual void takeDamage(int damage = 0) = 0;
-
-	virtual void setDead()
-	{
-		m_dead = true;
-	}
-
-	virtual bool isDead() const
-	{
-		return m_dead;
-	}
+	virtual bool overlap() { return true; }
 
 	virtual int damageToPlayer()
 	{
 		return 0;
 	}
+	virtual void takeDamage(int damage = 0) = 0;
+	virtual void setDead()
+	{
+		m_dead = true;
+	}
+	virtual bool isDead() const
+	{
+		return m_dead;
+	}
+
+	//set false for food
+	virtual bool destructible()
+	{
+		return true;
+	}
+	virtual bool consumable()
+	{
+		return false;
+	}
+
 
 	void polarToCartesian(int& x, int& y, int theta, int r = VIEW_RADIUS);
 
@@ -121,6 +131,8 @@ public:
 	{
 		m_health -= damage;
 	}
+
+	virtual bool destructible() { return false; }
 
 	//Might remove??
 	/*int getHealth() const
@@ -191,6 +203,8 @@ public:
 		setDead();
 	}
 
+	virtual bool overlap();
+
 	virtual void doSomething();
 
 private:
@@ -213,14 +227,25 @@ private:
 class Projectile : public Actor
 {
 public:
-	Projectile(StudentWorld* world, int ImageID,  double startX, double startY, int dir, int range)
+	Projectile(StudentWorld* world, int ImageID,  double startX, double startY, int dir, int range, int damage)
 		: Actor(world, ImageID, startX, startY, dir) // depth:0
 	{
 		m_range = range; //max pixels a projectile will travel
 		m_travelled = 0; //distance travelled
+		m_strength = damage;
 	}
 
 	void move();
+	
+	int damageGiven() { return m_strength; }
+
+	virtual bool destructible() { return false; }
+
+	virtual void setDead()
+	{
+		Actor::setDead();
+		m_travelled = m_range;
+	}
 
 	virtual bool isDead() const
 	{
@@ -229,17 +254,25 @@ public:
 		return true;
 	}
 
-
 	virtual void doSomething()
 	{
+		if (overlap())
+		{
+			setDead();
+			return;
+		}
 		move();
 	}
 
 	virtual void takeDamage(int damage = 0){}
 
 private:
+
+	virtual bool overlap();
+
 	int m_travelled;
 	int m_range;
+	int m_strength;
 };
 
 ////////////////////////////////////////////////////////////
@@ -249,8 +282,8 @@ private:
 class Spray : public Projectile
 {
 public:
-	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112)
-		: Projectile(world, IID_SPRAY, startX, startY, dir, range) //ImageID: Spray, ..., range: 112
+	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112, int damage = 1)//CHANGE DAMAGE
+		: Projectile(world, IID_SPRAY, startX, startY, dir, range, damage) //ImageID: Spray, ..., range: 112
 	{}
 
 
@@ -269,8 +302,8 @@ public:
 class Flame : public Projectile
 {
 public:
-	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32)
-		: Projectile(world, IID_FLAME, startX, startY, dir, range) //ImageID: Flame, ..., range: 32
+	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32, int damage = 1)//CHANGE DAMAGE
+		: Projectile(world, IID_FLAME, startX, startY, dir, range, damage) //ImageID: Flame, ..., range: 32
 	{}
 
 	//virtual void doSomething();
@@ -352,6 +385,8 @@ public:
 	{
 		m_bacteriaHp -= damage;
 	}
+
+	virtual bool overlap() { return true; };
 
 	virtual void eatMitosis() = 0;
 
@@ -448,10 +483,15 @@ class Consumable : public Actor
 {
 public:
 	Consumable(StudentWorld* world, int imageID, double startX, double startY, int dir = 0)
-		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:
 	{ 
 		setMaxAge();
 		m_ticksAlive = 0;
+	}
+
+	virtual bool consumable()
+	{
+		return true;
 	}
 
 	virtual void incTicksAlive()
@@ -466,13 +506,21 @@ public:
 		return false;
 	}
 
-	void setMaxAge();
+	void consume()
+	{
+		setDead();
+		applyEffect();
+	}
 
 	virtual void doSomething() = 0;
 
 	virtual void takeDamage(int damage = 0) { setDead(); };
 
 private:
+
+	void setMaxAge();
+	void applyEffect() {}
+
 	int m_ticksAlive;
 	int m_maxAge;
 };
@@ -493,6 +541,11 @@ public:
 		: Consumable(world, IID_FOOD, startX, startY) //ImageID: Spray, ..., depth:0
 	{
 
+	}
+
+	virtual bool destructible()
+	{
+		return false;
 	}
 
 	virtual void doSomething() = 0;
@@ -585,8 +638,6 @@ public:
 	{
 
 	}
-
-
 
 	virtual void doSomething() {};
 private:
