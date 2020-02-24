@@ -1,9 +1,8 @@
 #include "Actor.h"
 #include "StudentWorld.h"
 
+using namespace std;
 // Students:  Add code to this file, Actor.h, StudentWorld.h, and StudentWorld.cpp
-
-const double PI = 4 * atan(1);
 
 /*void Actor::activate()
 {
@@ -115,6 +114,7 @@ int getDirection() const; // in degrees (0-359)
 void setDirection(Direction d); // in degrees (0-359)
 */
 
+    overlap();
 
     int ch = 0;
     if (getWorld()->getKey(ch))
@@ -139,7 +139,7 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter--;
 
-            printStats(x, y);
+            //printStats(x, y);
 
             break;
 
@@ -153,7 +153,7 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter++;
 
-            printStats(x, y);
+            //printStats(x, y);
 
             break;
 
@@ -161,8 +161,8 @@ void setDirection(Direction d); // in degrees (0-359)
             if (m_sprayCharge >= 1)
             {
                 getPositionInThisDirection(getDirection(), SPRITE_WIDTH, dx, dy);
-                printStats(x, y);
-                std::cerr << dx << " " << dy << std::endl;;
+                //printStats(x, y);
+                //std::cerr << dx << " " << dy << std::endl;;
                 getWorld()->addNewActor(spray, getWorld(), dx, dy, getDirection());
                 getWorld()->playSound(SOUND_PLAYER_SPRAY);
                 m_sprayCharge--;
@@ -190,6 +190,16 @@ void setDirection(Direction d); // in degrees (0-359)
         m_sprayCharge++;
 
     //std::cerr << "SprayCharge: " << m_sprayCharge << std::endl << std::endl;
+}
+
+bool Socrates::overlap()
+{
+    return getWorld()->playerOverlap();
+}
+
+void Socrates::incLife()
+{
+    getWorld()->incLives();
 }
 
 void Socrates::setTheta()
@@ -255,12 +265,7 @@ void Projectile::move()
 
 bool Projectile::overlap()
 {
-    if (getWorld()->projectileOverlap(this))
-    {
-        setDead();
-        return true;
-    }
-    return false;
+    return getWorld()->projectileOverlap(this);
 }
 
 ////////////////////////////////////////////////////////////
@@ -294,7 +299,76 @@ bool Projectile::overlap()
 
 void Pit::doSomething()
 {
+    if (spawnBacteria())
+        getWorld()->playSound(SOUND_BACTERIUM_BORN);
+}
 
+bool Pit::spawnBacteria()
+{
+    /*
+    Otherwise, there is a 1 in 50 chance that during a tick, a given pit will emit a
+bacterium. Assuming the current tick was chosen to emit bacteria into the Petri
+dish:
+a. Considering only the types of bacteria that is has not yet run out of, the pit
+must randomly select one of those types (each type being equally likely to be
+chosen).
+b. It must create a new bacterium object of the chosen type (regular salmonella,
+aggressive salmonella or E. coli) with an (x ,y) coordinate that is the same as
+the pit’s (x ,y) coordinate.
+c. It must add that new bacterium to the StudentWorld object.
+d. It must decrement the count of bacteria of the chosen type that it has left in its
+inventory.
+e. It (or some other object) must play a sound effect to indicate that the
+bacterium was just born: SOUND_BACTERIUM_BORN.
+    */
+
+    int spawnBacteria = randInt(0, 49);
+
+    const int SAL = 1;
+    const int ASAL = 2;
+    const int EC = 3;
+
+    Salmonella* sal = nullptr;
+    AggroSalmonella* asal = nullptr;
+    EColi* ec = nullptr;
+
+    if (!spawnBacteria)
+    {
+        int bacteria = 0;
+        for (;;)
+        {
+            bacteria = randInt(1, 3);
+            switch (bacteria)
+            {
+            case SAL:
+                if (m_numSal)
+                {
+                    getWorld()->addNewActor(sal, getWorld(), getX(), getY(), 90);
+                    m_numSal--;
+                    return true;
+                }
+                break;
+            case ASAL:
+                if (m_numASal)
+                {
+                    getWorld()->addNewActor(asal, getWorld(), getX(), getY(), 90);
+                    m_numASal--;
+                    return true;
+                }
+                break;
+            case EC:
+                if (m_numEColi)
+                {
+                    getWorld()->addNewActor(ec, getWorld(), getX(), getY(), 90);
+                    m_numEColi;
+                    return true;
+                }
+                break;
+            }
+        }
+    }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////
@@ -306,9 +380,122 @@ void Pit::doSomething()
 /////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
 ////////////////////////////////////////////////////////////
 
+bool Bacteria::overlap()
+{
+    return getWorld()->bacteriaOverlap(this);
+}
+
 
 void Salmonella::doSomething()
 {
+    if (isDead())
+        return;
+
+    cerr << "MOVE PLAN DIST: " << getMovePlanDist() <<  endl;
+
+    overlap();
+
+    double newdir = -1;
+    double newx = 0;
+    double newy = 0;
+
+    if (getMovePlanDist() > 0)
+    {
+        cerr << "move plan > 0" << endl;
+        decMovePlan();
+
+        getPositionInThisDirection(getDirection(), 3, newx, newy);
+
+        //if not blocked:
+        if (!getBlocked() && getWorld()->distApart(newx, newy) < VIEW_RADIUS)
+        {
+            cerr << "not blocked" << endl;
+            moveTo(newx, newy);
+        }
+        else
+        {
+            cerr << "blocked" << endl;
+            setDirection(randInt(0, 359)); //sets new dir randomly
+            resetMovePlan(); //resets movement plan to 10
+        }
+        return;
+    }
+    else if (getWorld()->findFood(this, newdir))
+    {
+        cerr << "Finding food, newdir: " << newdir << endl;
+        setDirection(newdir);
+
+        overlap(); //check again if blocked by dirt
+
+        if (!getBlocked())
+        {
+            cerr << "not blocked" << endl;
+            resetMovePlan();
+            return;
+        }
+        else
+        {
+            cerr << "found food but blocked" << endl;
+            setDirection(randInt(0, 359));
+            resetMovePlan();
+            return;
+        }
+    }
+    else
+    {
+        cerr << "move plan < 0, no food" << endl;
+        setDirection(randInt(0, 359));
+        resetMovePlan();
+        return;
+    }
+
+    /*
+    The regular salmonella will check to see if it has a movement plan distance of
+greater than zero. If so this means it wants to continue moving the same direction
+it was previously moving in. It will do the following:
+a. Decrement its movement plan distance by one.
+b. It will see if it can move forward by 3 pixels in the direction it is currently
+facing. The following things will block the regular salmonella from
+moving forward:
+i. Moving forward 3 pixels would cause the regular salmonella to
+overlap with a dirt pile, where in this case, the definition of
+overlap means that the Euclidean distance from the regular
+salmonella’s proposed new (x, y) location to the dirt pile is <=
+SPRITE_WIDTH/2 pixels.
+ii. Moving forward 3 pixels would cause the regular salmonella to
+move outside of the Petri dish, that is, its distance from the center
+of the screen (VIEW_WIDTH/2, VIEW_HEIGHT/2) is greater
+than or equal to VIEW_RADIUS.
+c. If the regular salmonella can move forward 3 pixels to the new position, it
+(or some base class it’s derived from) must do so using either the
+GraphObject moveTo() or moveAngle() method.
+d. Otherwise, if the regular salmonella is blocked from moving forward 3
+pixels, it will:
+i. Pick a random direction to move in, from 0 to 359 degrees, and set
+its direction to that new direction.
+ii. Reset its movement plan distance to 10, so it will try to move 10
+ticks in this new direction.
+e. The regular salmonella will immediately return.
+
+
+6. Otherwise, the regular salmonella will get the directional angle to the closest food
+within 128 pixels of itself on the Petri dish.
+a. If no food can be found within 128 pixels, then the regular salmonella
+will:
+i. Pick a random direction to move in, from 0 to 359 degrees, and set
+its direction to that direction.
+ii. Reset its movement plan distance to 10, so it will try to move 10
+ticks in this new direction.
+iii. Immediately return.
+b. If food can be found within 128 pixels, the regular salmonella will try to
+move toward that food. If moving forward 3 pixels would cause the
+regular salmonella to overlap9 with a dirt pile, then it will:
+i. Pick a random direction to move in, from 0 to 359 degrees, and set
+its direction to that new direction.
+ii. Reset its movement plan distance to 10, so it will try to move 10
+ticks in this new direction.
+iii. Immediately return.
+    */
 
 }
 
@@ -317,7 +504,26 @@ void Salmonella::eatMitosis()
     if (foodEaten() >= 3)
     {
         Salmonella* s = nullptr;
-        getWorld()->addNewActor(s, getWorld(), getX(), getY(), getDirection());
+
+        int newx = 0;
+        int newy = 0;
+
+        if (getX() < VIEW_WIDTH / 2)
+            newx = getX() + SPRITE_WIDTH;
+        else if (getX() > VIEW_WIDTH / 2)
+            newx = getX() - SPRITE_WIDTH;
+        else
+            newx = getX();
+
+
+        if (getY() < VIEW_HEIGHT / 2)
+            newy = getY() + SPRITE_WIDTH;
+        else if (getY() > VIEW_HEIGHT / 2)
+            newy = getY() - SPRITE_WIDTH;
+        else
+            newy = getY();
+
+        getWorld()->addNewActor(s, getWorld(), newx, newy, getDirection());
         resetEaten();
     }
     else
@@ -335,7 +541,10 @@ void Salmonella::eatMitosis()
 
 void AggroSalmonella::doSomething()
 {
+    if (isDead())
+        return;
 
+    overlap();
 }
 
 void AggroSalmonella::eatMitosis()
@@ -343,7 +552,26 @@ void AggroSalmonella::eatMitosis()
     if (foodEaten() >= 3)
     {
         AggroSalmonella* aS = nullptr;
-        getWorld()->addNewActor(aS, getWorld(), getX(), getY(), getDirection());
+
+        int newx = 0;
+        int newy = 0;
+
+        if (getX() < VIEW_WIDTH / 2)
+            newx = getX() + SPRITE_WIDTH;
+        else if (getX() > VIEW_WIDTH / 2)
+            newx = getX() - SPRITE_WIDTH;
+        else
+            newx = getX();
+
+
+        if (getY() < VIEW_HEIGHT / 2)
+            newy = getY() + SPRITE_WIDTH;
+        else if (getY() > VIEW_HEIGHT / 2)
+            newy = getY() - SPRITE_WIDTH;
+        else
+            newy = getY();
+
+        getWorld()->addNewActor(aS, getWorld(), newx, newy, getDirection());
         resetEaten();
     }
     else
@@ -362,7 +590,10 @@ void AggroSalmonella::eatMitosis()
 
 void EColi::doSomething()
 {
+    if (isDead())
+        return;
 
+    overlap();
 }
 
 void EColi::eatMitosis()
@@ -370,7 +601,26 @@ void EColi::eatMitosis()
     if (foodEaten() >= 3)
     {
         EColi* eC = nullptr;
-        getWorld()->addNewActor(eC, getWorld(), getX(), getY(), getDirection());
+
+        int newx = 0;
+        int newy = 0;
+
+        if (getX() < VIEW_WIDTH / 2)
+            newx = getX() + SPRITE_WIDTH;
+        else if (getX() > VIEW_WIDTH / 2)
+            newx = getX() - SPRITE_WIDTH;
+        else
+            newx = getX();
+
+
+        if (getY() < VIEW_HEIGHT / 2)
+            newy = getY() + SPRITE_WIDTH;
+        else if (getY() > VIEW_HEIGHT / 2)
+            newy = getY() - SPRITE_WIDTH;
+        else
+            newy = getY();
+
+        getWorld()->addNewActor(eC, getWorld(), newx, newy, getDirection());
         resetEaten();
     }
     else
@@ -393,12 +643,55 @@ void EColi::eatMitosis()
 
 
 ////////////////////////////////////////////////////////////
-/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+/////////////////CONSUMABLES CLASS IMPLEMENTATION///////////
 ////////////////////////////////////////////////////////////
+
+void Consumable::doSomething()
+{
+    m_ticksAlive++;
+}
+
 void Consumable::setMaxAge()
 {
     m_maxAge = std::max(randInt(0, 300 - (10 * getWorld()->getLevel()) - 1), 50);
 }
+
+bool Consumable::overlap()
+{
+    m_ticksAlive = m_maxAge;
+    return getWorld()->consumableOverlap(this);
+    //always returns true;
+}
+
+void Food::applyEffect(Socrates* s)
+{
+    //see bacteria overlap
+}
+
+void FlameG::applyEffect(Socrates* s)
+{
+    s->incFlame();
+    getWorld()->playSound(SOUND_GOT_GOODIE);
+}
+
+void HealthG::applyEffect(Socrates* s)
+{
+    s->restoreHealth();
+    getWorld()->playSound(SOUND_GOT_GOODIE);
+}
+
+void LifeG::applyEffect(Socrates* s)
+{
+    s->incLife();
+    getWorld()->playSound(SOUND_GOT_GOODIE);
+}
+
+void Fungus::applyEffect(Socrates* s)
+{
+    s->takeDamage(damageToPlayer());
+    getWorld()->playSound(SOUND_PLAYER_HURT);
+}
+
 
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////

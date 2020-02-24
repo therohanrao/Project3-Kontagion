@@ -63,7 +63,12 @@ public:
 
 	virtual void doSomething() = 0;
 
-	virtual bool overlap() { return true; }
+	//pure virtual??
+	virtual bool overlap() 
+	{ 
+		std::cerr << " shouldnt be running this: actor::overlap()" << std::endl;
+			return true; 
+	} // make pure virtual
 
 	virtual int damageToPlayer()
 	{
@@ -129,12 +134,17 @@ public:
 
 	virtual void takeDamage(int damage)
 	{
+
+		std::cerr << m_health << std::endl;
+		std::cerr << damage << std::endl;
 		m_health -= damage;
 	}
 
 	virtual bool destructible() { return false; }
 
-	//Might remove??
+	virtual bool overlap();
+
+	//Might remove?? (get health function)
 	/*int getHealth() const
 	{
 		return m_health;
@@ -149,10 +159,24 @@ public:
 
 	virtual bool isDead() const
 	{
-		if (m_health == 0)
+		if (m_health <= 0)
+		{
 			return true;
+		}
 		return false;
 	}
+
+	void incFlame()
+	{
+		m_flameCharge += 5;
+	}
+
+	void restoreHealth() 
+	{ 
+		m_health = 100;
+	}
+
+	void incLife();
 
 	void setTheta();
 
@@ -200,6 +224,7 @@ public:
 
 	virtual void takeDamage(int damage = 0)
 	{
+		std::cerr << "dirt killed" << std::endl;
 		setDead();
 	}
 
@@ -256,11 +281,7 @@ public:
 
 	virtual void doSomething()
 	{
-		if (overlap())
-		{
-			setDead();
-			return;
-		}
+		overlap();
 		move();
 	}
 
@@ -282,12 +303,10 @@ private:
 class Spray : public Projectile
 {
 public:
-	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112, int damage = 1)//CHANGE DAMAGE
+	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112, int damage = 2)
 		: Projectile(world, IID_SPRAY, startX, startY, dir, range, damage) //ImageID: Spray, ..., range: 112
 	{}
 
-
-	//virtual void doSomething();
 };
 
 ////////////////////////////////////////////////////////////
@@ -302,11 +321,10 @@ public:
 class Flame : public Projectile
 {
 public:
-	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32, int damage = 1)//CHANGE DAMAGE
+	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32, int damage = 5)
 		: Projectile(world, IID_FLAME, startX, startY, dir, range, damage) //ImageID: Flame, ..., range: 32
 	{}
 
-	//virtual void doSomething();
 private:
 };
 
@@ -322,16 +340,30 @@ private:
 class Pit : public Actor
 {
 public:
-	Pit(StudentWorld* world, double startX, double startY, int dir)
+	Pit(StudentWorld* world, double startX, double startY, int dir = 0)
 		: Actor(world, IID_SPRAY, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
-
+		m_numSal = 5;
+		m_numASal = 3;
+		m_numEColi = 2;
 	}
 
+	virtual bool isDead()
+	{
+		if (m_numSal + m_numASal + m_numEColi == 0)
+			return true;
+		return false;
+	}
 
+	virtual void takeDamage(int damage = 0) {};
+
+	bool spawnBacteria();
 
 	virtual void doSomething();
 private:
+	int m_numSal;
+	int m_numASal;
+	int m_numEColi;
 };
 
 ////////////////////////////////////////////////////////////
@@ -349,9 +381,11 @@ public:
 	Bacteria(StudentWorld* world, int imageID, double startX, double startY, int dir, int health, int playerdamage)
 		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
+		m_movePlanDist = 0;
 		m_bacteriaHp = health;
-		m_foodEaten = 0;
 		m_damageDoes = playerdamage;
+		m_foodEaten = 0;
+		m_blocked = false;
 	}
 
 	virtual int damageToPlayer()
@@ -366,32 +400,60 @@ public:
 		return false;
 	}
 
-	virtual int foodEaten() const
-	{
-		return m_foodEaten;
-	}
-
-	virtual void eat()
-	{
-		m_bacteriaHp++;
-	}
-
-	virtual void resetEaten()
-	{
-		m_foodEaten = 0;
-	}
-
 	virtual void takeDamage(int damage)
 	{
 		m_bacteriaHp -= damage;
 	}
 
-	virtual bool overlap() { return true; };
+	virtual bool overlap();
 
 	virtual void eatMitosis() = 0;
 
 	virtual void doSomething() = 0;
+
+
+	//Movement Plan functions:
+	virtual int getMovePlanDist()
+	{
+		return m_movePlanDist;
+	}
+	virtual void decMovePlan()
+	{
+		m_movePlanDist--;
+	}
+	virtual void resetMovePlan()
+	{
+		std::cerr << "MOVE PLAN RESET " << std::endl;
+		m_movePlanDist = 10;
+	}
+
+	virtual void dirtBlocked(bool blocked)
+	{
+		m_blocked = blocked;
+	}
+	virtual bool getBlocked() const
+	{
+		return m_blocked;
+	}
+
+	//Food functions:
+	virtual int foodEaten() const
+	{
+		return m_foodEaten;
+	}
+	virtual void eat()
+	{
+		m_bacteriaHp++;
+	}
+	virtual void resetEaten()
+	{
+		m_foodEaten = 0;
+	}
 private:
+
+	bool m_blocked;
+
+	int m_movePlanDist;
 	int m_bacteriaHp;
 	int m_foodEaten;
 	int m_damageDoes;
@@ -501,25 +563,26 @@ public:
 
 	virtual bool isDead() const
 	{
-		if (m_ticksAlive >= m_maxAge)
+		if (Actor::isDead())
 			return true;
+		if (m_ticksAlive >= m_maxAge)
+		{
+			std::cerr << "fungus killed" << std::endl;
+			return true;
+		}
 		return false;
 	}
 
-	void consume()
-	{
-		setDead();
-		applyEffect();
-	}
+	virtual bool overlap();
 
-	virtual void doSomething() = 0;
+	virtual void applyEffect(Socrates* s) = 0;
+
+	virtual void doSomething();
 
 	virtual void takeDamage(int damage = 0) { setDead(); };
 
 private:
-
 	void setMaxAge();
-	void applyEffect() {}
 
 	int m_ticksAlive;
 	int m_maxAge;
@@ -537,18 +600,26 @@ private:
 class Food : public Consumable
 {
 public:
-	Food(StudentWorld* world, double startX, double startY)
-		: Consumable(world, IID_FOOD, startX, startY) //ImageID: Spray, ..., depth:0
+	Food(StudentWorld* world, double startX, double startY, double dir = 0)
+		: Consumable(world, IID_FOOD, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
 
 	}
+
+	virtual void applyEffect(Socrates* s);
+
+	virtual bool isDead() const
+	{
+		return Actor::isDead();
+	}
+
+	virtual void takeDamage(int damage = 0) {};
 
 	virtual bool destructible()
 	{
 		return false;
 	}
 
-	virtual void doSomething() = 0;
 private:
 
 };
@@ -569,7 +640,7 @@ public:
 		: Consumable(world, IID_FLAME_THROWER_GOODIE, startX, startY) //ImageID: Spray, ..., depth:0
 	{}
 
-	virtual void doSomething() {};
+	virtual void applyEffect(Socrates* s);
 private:
 };
 
@@ -591,9 +662,8 @@ public:
 
 	}
 
+	void applyEffect(Socrates* s);
 
-
-	virtual void doSomething() {};
 private:
 };
 
@@ -615,9 +685,8 @@ public:
 
 	}
 
+	void applyEffect(Socrates* s);
 
-
-	virtual void doSomething() {};
 private:
 };
 
@@ -639,7 +708,13 @@ public:
 
 	}
 
-	virtual void doSomething() {};
+	virtual int damageToPlayer()
+	{
+		return 25;
+	}
+
+	void applyEffect(Socrates* s);
+
 private:
 };
 
