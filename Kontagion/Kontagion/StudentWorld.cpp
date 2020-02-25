@@ -136,6 +136,20 @@ etc.).
     addFungus();
     addGoodies();
 
+    list<Actor*>::iterator actorsIt;
+
+    for (actorsIt = m_actors.begin(); actorsIt != m_actors.end(); ) // notice: no it++
+    {
+        (*actorsIt)->doSomething(); //call all doSomething for actors
+        if ((*actorsIt)->isDead()) //check if dead
+        {
+            delete* actorsIt; //if so, delete
+            actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
+            std::cerr << "killed something" << endl;
+        }
+        else actorsIt++; // otherwise go to next pointer in list
+    }
+
     int input;
 
     getKey(input);
@@ -232,11 +246,16 @@ double StudentWorld::distApart(int x1, int y1, int x2, int y2) const //returns t
 }
 
 
+<<<<<<< HEAD
 bool StudentWorld::overlap(Actor* a1, int overlapDist)
+=======
+bool StudentWorld::overlap(Actor* a1)
+>>>>>>> master
 {
     list<Actor*>::iterator it;
     it = m_actors.begin();
 
+<<<<<<< HEAD
     //if no arguments, use overlap on socrates
     if (a1 == nullptr)
         a1 = m_socrates;
@@ -329,6 +348,20 @@ void StudentWorld::addGoodies()
             m_actors.push_back(new HealthG(this, x, y));
     }
 }
+=======
+    while (it != m_actors.end()) // notice: no it++
+    {
+        if (distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= SPRITE_WIDTH)
+            return true;
+        it++;
+    }
+    return false;
+
+
+}
+
+
+>>>>>>> master
 //  GAMEWORLD FUNCTIONS? HERE:
 /*
 

@@ -27,7 +27,11 @@ public:
     //x2 & y2 set to center of circle default
     double distApart(int x1, int y1, int x2 = VIEW_WIDTH/2, int y2 = VIEW_HEIGHT/2) const;
 
+<<<<<<< HEAD
     bool overlap(Actor* a1 = nullptr, int overlapDist = SPRITE_WIDTH);
+=======
+    bool overlap(Actor* a1);
+>>>>>>> master
     
     //GODLY:
     template<typename ActorType>
@@ -38,9 +42,12 @@ public:
         std::cerr << "new actor added..." << std::endl;
     }
 
+<<<<<<< HEAD
     bool dirtOverlap(Actor* d);
     bool projectileOverlap(Projectile* p);
     bool bacteriaOverlap(Bacteria* b);
+=======
+>>>>>>> master
 
 private:
 
@@ -50,8 +57,11 @@ private:
     void addDirt();
     void addFood();
 
+<<<<<<< HEAD
     void addFungus();
     void addGoodies();
+=======
+>>>>>>> master
 
     Socrates* m_socrates;
 

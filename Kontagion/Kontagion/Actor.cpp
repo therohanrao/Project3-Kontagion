@@ -139,7 +139,11 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter--;
 
+<<<<<<< HEAD
             //printStats(x, y);
+=======
+            printStats(x, y);
+>>>>>>> master
 
             break;
 
@@ -153,7 +157,11 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter++;
 
+<<<<<<< HEAD
             //printStats(x, y);
+=======
+            printStats(x, y);
+>>>>>>> master
 
             break;
 
@@ -161,12 +169,22 @@ void setDirection(Direction d); // in degrees (0-359)
             if (m_sprayCharge >= 1)
             {
                 getPositionInThisDirection(getDirection(), SPRITE_WIDTH, dx, dy);
+<<<<<<< HEAD
                 //printStats(x, y);
                 //std::cerr << dx << " " << dy << std::endl;;
+=======
+                printStats(x, y);
+                std::cerr << dx << " " << dy << std::endl;;
+>>>>>>> master
                 getWorld()->addNewActor(spray, getWorld(), dx, dy, getDirection());
                 getWorld()->playSound(SOUND_PLAYER_SPRAY);
                 m_sprayCharge--;
             }
+<<<<<<< HEAD
+=======
+            m_rechargeDelay = true;
+
+>>>>>>> master
             break;
 
         case KEY_PRESS_ENTER:
@@ -186,8 +204,14 @@ void setDirection(Direction d); // in degrees (0-359)
             break;
         }
     }
+<<<<<<< HEAD
     else if (m_sprayCharge < 20)
         m_sprayCharge++;
+=======
+    else if (m_sprayCharge < 20 && !m_rechargeDelay)
+        m_sprayCharge++;
+    m_rechargeDelay = false;
+>>>>>>> master
 
     //std::cerr << "SprayCharge: " << m_sprayCharge << std::endl << std::endl;
 }
@@ -236,13 +260,6 @@ void DirtPile::doSomething()
 
 }
 
-bool DirtPile::overlap()
-{
-    if (getWorld()->dirtOverlap(this))
-        setDead();
-    return true;
-}
-
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
@@ -254,18 +271,9 @@ bool DirtPile::overlap()
 
 void Projectile::move()
 {
-    if (m_travelled < m_range)
-    {
-        moveAngle(getDirection(), SPRITE_WIDTH);
-        m_travelled += SPRITE_WIDTH;
-    }
-
+    moveAngle(getDirection(), SPRITE_WIDTH);
+    m_distanceLeft -= SPRITE_WIDTH;
     //std::cerr << "distLeft: " << m_distanceLeft << std::endl;
-}
-
-bool Projectile::overlap()
-{
-    return getWorld()->projectileOverlap(this);
 }
 
 ////////////////////////////////////////////////////////////
@@ -283,6 +291,94 @@ bool Projectile::overlap()
 
 
 ////////////////////////////////////////////////////////////
+/////////////////FLAME CLASS IMPLEMENTATION/////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+
+void Pit::doSomething()
+{
+
+}
+
+bool DirtPile::overlap()
+{
+    if (getWorld()->dirtOverlap(this))
+        setDead();
+    return true;
+}
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+<<<<<<< HEAD
+/////////////////PROJECTILE CLASS IMPLEMENTATION////////////
+////////////////////////////////////////////////////////////
+
+void Projectile::move()
+{
+    if (m_travelled < m_range)
+    {
+        moveAngle(getDirection(), SPRITE_WIDTH);
+        m_travelled += SPRITE_WIDTH;
+    }
+
+    //std::cerr << "distLeft: " << m_distanceLeft << std::endl;
+}
+
+bool Projectile::overlap()
+{
+    return getWorld()->projectileOverlap(this);
+=======
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+
+void Salmonella::doSomething()
+{
+
+>>>>>>> master
+}
+
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+<<<<<<< HEAD
+/////////////////SPRAY CLASS IMPLEMENTATION/////////////////
+////////////////////////////////////////////////////////////
+
+=======
+/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
+////////////////////////////////////////////////////////////
+
+void AggroSalmonella::doSomething()
+{
+
+}
+
+>>>>>>> master
+////////////////////////////////////////////////////////////
+/////////////////END IMPLEMENTATION/////////////////////////
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+<<<<<<< HEAD
 /////////////////FLAME CLASS IMPLEMENTATION/////////////////
 ////////////////////////////////////////////////////////////
 
@@ -584,11 +680,14 @@ void AggroSalmonella::eatMitosis()
 
 
 ////////////////////////////////////////////////////////////
+=======
+>>>>>>> master
 /////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
 ////////////////////////////////////////////////////////////
 
 
 void EColi::doSomething()
+<<<<<<< HEAD
 {
     if (isDead())
         return;
@@ -693,6 +792,12 @@ void Fungus::applyEffect(Socrates* s)
 }
 
 
+=======
+{
+
+}
+
+>>>>>>> master
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////

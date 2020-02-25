@@ -95,6 +95,16 @@ public:
 	}
 
 
+<<<<<<< HEAD
+=======
+	virtual void setDead(bool state);
+	virtual bool isDead() const = 0;
+
+	//virtual bool canHurt();
+
+
+
+>>>>>>> master
 	void polarToCartesian(int& x, int& y, int theta, int r = VIEW_RADIUS);
 
 private:
@@ -222,6 +232,7 @@ public:
 
 	}
 
+<<<<<<< HEAD
 	virtual void takeDamage(int damage = 0)
 	{
 		std::cerr << "dirt killed" << std::endl;
@@ -230,6 +241,13 @@ public:
 
 	virtual bool overlap();
 
+=======
+	virtual bool isDead() const
+	{
+		return false;
+	}
+
+>>>>>>> master
 	virtual void doSomething();
 
 private:
@@ -250,6 +268,7 @@ private:
 ////////////////////////////////////////////////////////////
 
 class Projectile : public Actor
+<<<<<<< HEAD
 {
 public:
 	Projectile(StudentWorld* world, int ImageID,  double startX, double startY, int dir, int range, int damage)
@@ -305,8 +324,45 @@ class Spray : public Projectile
 public:
 	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112, int damage = 2)
 		: Projectile(world, IID_SPRAY, startX, startY, dir, range, damage) //ImageID: Spray, ..., range: 112
+=======
+{
+public:
+	Projectile(StudentWorld* world, int ImageID,  double startX, double startY, int dir, int range)
+		: Actor(world, ImageID, startX, startY, dir) // depth:0
+	{
+		m_distanceLeft = range; //max pixels a projectile will travel
+	}
+
+	void move();
+
+	virtual bool isDead() const
+	{
+		if (m_distanceLeft > 0)
+			return false;
+		return true;
+	}
+
+	virtual void doSomething()
+	{
+		move();
+	}
+private:
+	int m_distanceLeft;
+};
+
+////////////////////////////////////////////////////////////
+/////////////////END DECLARATION////////////////////////////
+////////////////////////////////////////////////////////////
+
+class Spray : public Projectile
+{
+public:
+	Spray(StudentWorld* world, double startX, double startY, int dir, int range = 112)
+		: Projectile(world, IID_SPRAY, startX, startY, dir, range) //ImageID: Spray, ..., range: 112
+>>>>>>> master
 	{}
 
+	//virtual void doSomething();
 };
 
 ////////////////////////////////////////////////////////////
@@ -321,10 +377,18 @@ public:
 class Flame : public Projectile
 {
 public:
+<<<<<<< HEAD
 	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32, int damage = 5)
 		: Projectile(world, IID_FLAME, startX, startY, dir, range, damage) //ImageID: Flame, ..., range: 32
 	{}
 
+=======
+	Flame(StudentWorld* world, double startX, double startY, int dir, int range = 32)
+		: Projectile(world, IID_FLAME, startX, startY, dir, range) //ImageID: Flame, ..., range: 32
+	{}
+
+	//virtual void doSomething();
+>>>>>>> master
 private:
 };
 
@@ -340,6 +404,7 @@ private:
 class Pit : public Actor
 {
 public:
+<<<<<<< HEAD
 	Pit(StudentWorld* world, double startX, double startY, int dir = 0)
 		: Actor(world, IID_SPRAY, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
@@ -364,6 +429,18 @@ private:
 	int m_numSal;
 	int m_numASal;
 	int m_numEColi;
+=======
+	Pit(StudentWorld* world, double startX, double startY, int dir)
+		: Actor(world, IID_SPRAY, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething();
+private:
+>>>>>>> master
 };
 
 ////////////////////////////////////////////////////////////
@@ -378,6 +455,7 @@ private:
 class Bacteria : public Actor
 {
 public:
+<<<<<<< HEAD
 	Bacteria(StudentWorld* world, int imageID, double startX, double startY, int dir, int health, int playerdamage)
 		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
@@ -457,6 +535,18 @@ private:
 	int m_bacteriaHp;
 	int m_foodEaten;
 	int m_damageDoes;
+=======
+	Bacteria(StudentWorld* world, int imageID, double startX, double startY, int dir)
+		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
+>>>>>>> master
 };
 
 ////////////////////////////////////////////////////////////
@@ -471,16 +561,27 @@ private:
 class Salmonella : public Bacteria
 {
 public:
+<<<<<<< HEAD
 	Salmonella(StudentWorld* world, double startX, double startY, int dir = 90)
 		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 4, 1) //ImageID: Spray, ..., hp: 4, damage: 1
+=======
+	Salmonella(StudentWorld* world, double startX, double startY, int dir)
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+>>>>>>> master
 	{
 
 	}
 
+<<<<<<< HEAD
 	virtual void doSomething();
 
 	virtual void eatMitosis();
 
+=======
+
+
+	virtual void doSomething();
+>>>>>>> master
 private:
 };
 
@@ -497,6 +598,7 @@ class AggroSalmonella : public Bacteria
 {
 public:
 	AggroSalmonella(StudentWorld* world, double startX, double startY, int dir)
+<<<<<<< HEAD
 		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 10, 2) //ImageID: Spray, ..., health :10, playerdamage: 2
 	{
 
@@ -505,6 +607,16 @@ public:
 	virtual void doSomething();
 
 	virtual void eatMitosis();
+=======
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething();
+>>>>>>> master
 private:
 };
 
@@ -521,6 +633,7 @@ class EColi : public Bacteria
 {
 public:
 	EColi(StudentWorld* world, double startX, double startY, int dir)
+<<<<<<< HEAD
 		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 5, 4) //ImageID: EColi, ..., health: 5, playerdamage: 4
 	{
 
@@ -529,6 +642,16 @@ public:
 	virtual void doSomething();
 
 	virtual void eatMitosis();
+=======
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething();
+>>>>>>> master
 private:
 };
 
@@ -544,6 +667,7 @@ private:
 class Consumable : public Actor
 {
 public:
+<<<<<<< HEAD
 	Consumable(StudentWorld* world, int imageID, double startX, double startY, int dir = 0)
 		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:
 	{ 
@@ -586,6 +710,18 @@ private:
 
 	int m_ticksAlive;
 	int m_maxAge;
+=======
+	Consumable(StudentWorld* world, int imageID, double startX, double startY, int dir)
+		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething() = 0;
+private:
+>>>>>>> master
 };
 
 ////////////////////////////////////////////////////////////
@@ -600,12 +736,17 @@ private:
 class Food : public Consumable
 {
 public:
+<<<<<<< HEAD
 	Food(StudentWorld* world, double startX, double startY, double dir = 0)
+=======
+	Food(StudentWorld* world, double startX, double startY, int dir)
+>>>>>>> master
 		: Consumable(world, IID_FOOD, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
 
 	}
 
+<<<<<<< HEAD
 	virtual void applyEffect(Socrates* s);
 
 	virtual bool isDead() const
@@ -621,7 +762,12 @@ public:
 	}
 
 private:
+=======
+>>>>>>> master
 
+
+	virtual void doSomething() = 0;
+private:
 };
 
 ////////////////////////////////////////////////////////////
@@ -636,11 +782,23 @@ private:
 class FlameG : public Consumable
 {
 public:
+<<<<<<< HEAD
 	FlameG(StudentWorld* world, double startX, double startY)
 		: Consumable(world, IID_FLAME_THROWER_GOODIE, startX, startY) //ImageID: Spray, ..., depth:0
 	{}
 
 	virtual void applyEffect(Socrates* s);
+=======
+	FlameG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_FLAME_THROWER_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething() = 0;
+>>>>>>> master
 private:
 };
 
@@ -656,6 +814,7 @@ private:
 class HealthG : public Consumable
 {
 public:
+<<<<<<< HEAD
 	HealthG(StudentWorld* world, double startX, double startY)
 		: Consumable(world, IID_RESTORE_HEALTH_GOODIE, startX, startY) //ImageID: Spray, ..., depth:0
 	{
@@ -664,6 +823,17 @@ public:
 
 	void applyEffect(Socrates* s);
 
+=======
+	HealthG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_RESTORE_HEALTH_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething() = 0;
+>>>>>>> master
 private:
 };
 
@@ -679,6 +849,7 @@ private:
 class LifeG : public Consumable
 {
 public:
+<<<<<<< HEAD
 	LifeG(StudentWorld* world, double startX, double startY)
 		: Consumable(world, IID_EXTRA_LIFE_GOODIE, startX, startY) //ImageID: Spray, ..., depth:0
 	{
@@ -687,6 +858,17 @@ public:
 
 	void applyEffect(Socrates* s);
 
+=======
+	LifeG(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_EXTRA_LIFE_GOODIE, startX, startY, dir) //ImageID: Spray, ..., depth:0
+	{
+
+	}
+
+
+
+	virtual void doSomething() = 0;
+>>>>>>> master
 private:
 };
 
@@ -702,12 +884,18 @@ private:
 class Fungus : public Consumable
 {
 public:
+<<<<<<< HEAD
 	Fungus(StudentWorld* world, double startX, double startY)
 		: Consumable(world, IID_FUNGUS, startX, startY) //ImageID: Spray, ..., depth:0
+=======
+	Fungus(StudentWorld* world, double startX, double startY, int dir)
+		: Consumable(world, IID_FUNGUS, startX, startY, dir) //ImageID: Spray, ..., depth:0
+>>>>>>> master
 	{
 
 	}
 
+<<<<<<< HEAD
 	virtual int damageToPlayer()
 	{
 		return 25;
@@ -715,6 +903,11 @@ public:
 
 	void applyEffect(Socrates* s);
 
+=======
+
+
+	virtual void doSomething() = 0;
+>>>>>>> master
 private:
 };
 
