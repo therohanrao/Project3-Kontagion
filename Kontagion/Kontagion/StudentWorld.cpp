@@ -9,6 +9,8 @@
 
 using namespace std;
 
+//const double PI = 4 * atan(1);
+
 GameWorld* createStudentWorld(string assetPath)
 {
     return new StudentWorld(assetPath);
@@ -50,6 +52,8 @@ StudentWorld::~StudentWorld()
         //
 */
 
+
+//Game control functions:
 int StudentWorld::init()
 {
 
@@ -67,11 +71,20 @@ as described below.
 the Petri dish; this is in the left-middle of the dish.
     */
     m_socrates = new Socrates(this);
+
+    cerr << "added player..." << endl;
+
     m_overlapActorIt = m_actors.end();
 
+    //Salmonella* b = nullptr;
+    //addNewActor(b, this, 128, 128);
+
     addPits();
+    cerr << "added pits..." << endl;
     addFood();
+    cerr << "added food..." << endl;
     addDirt();
+    cerr << "added dirt..." << endl;
 
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -115,16 +128,17 @@ etc.).
     */
 
 
-
     list<Actor*>::iterator actorsIt;
 
+    //doSomething && isDead for all actors except socrates
     for (actorsIt = m_actors.begin(); actorsIt != m_actors.end(); ) // notice: no it++
     {
         if ((*actorsIt)->isDead()) //check if dead
         {
+            playSound((*actorsIt)->getDeathSound());
             delete* actorsIt; //if so, delete
             actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
-            std::cerr << "killed something" << endl;
+            //std::cerr << "killed something" << endl;
             continue;
         }
         (*actorsIt)->doSomething(); //call all doSomething for actors
@@ -132,23 +146,15 @@ etc.).
     }
 
     m_socrates->doSomething(); //must be after all object's doSomething()!!!
+    if (m_socrates->isDead())
+    {
+        playSound(SOUND_PLAYER_DIE);
+        decLives();
+        return GWSTATUS_PLAYER_DIED;
+    }
 
     addFungus();
     addGoodies();
-
-    list<Actor*>::iterator actorsIt;
-
-    for (actorsIt = m_actors.begin(); actorsIt != m_actors.end(); ) // notice: no it++
-    {
-        (*actorsIt)->doSomething(); //call all doSomething for actors
-        if ((*actorsIt)->isDead()) //check if dead
-        {
-            delete* actorsIt; //if so, delete
-            actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
-            std::cerr << "killed something" << endl;
-        }
-        else actorsIt++; // otherwise go to next pointer in list
-    }
 
     int input;
 
@@ -173,13 +179,39 @@ void StudentWorld::cleanUp()
         actorsIt = m_actors.erase(actorsIt);
     }
 
+    delete m_socrates;
+
     cerr << "cleanUp ran" << endl;
 }
 
 void StudentWorld::addPits()
 {
 
+    int numPits = 0;
+    int maxPits = getLevel();
 
+    while (numPits < maxPits)
+    {
+        int xPos = 0;
+        int yPos = 0;
+
+        xPos = randInt(0, VIEW_WIDTH);
+        yPos = randInt(0, VIEW_HEIGHT);
+
+        Pit* p = new Pit(this, xPos, yPos);
+
+        if (distApart(xPos, yPos) > 120.0 || overlap(p)) //gets random number within dist
+        {
+            delete p;
+            continue;
+        }
+
+        m_actors.push_back(p);
+        numPits++;
+        m_numActors++;
+
+        cerr << "adding pits..." << endl;
+    }
 
     /*
     2. Add L pits to the Petri dish at random locations, in a manner such that no two pits
@@ -192,7 +224,30 @@ Petri dish which is at (VIEW_WIDTH/2, VIEW_HEIGHT/2).
 void StudentWorld::addFood()
 {
 
+    int numFood = 0;
+    int maxFood = min(5 * getLevel(), 25);
 
+    while (numFood < maxFood)
+    {
+        int xPos = 0;
+        int yPos = 0;
+
+        xPos = randInt(0, VIEW_WIDTH);
+        yPos = randInt(0, VIEW_HEIGHT);
+
+        Food* f = new Food(this, xPos, yPos);
+
+        if (distApart(xPos, yPos) > 120.0 || overlap(f)) //gets random number within dist
+        {
+            delete f;
+            continue;
+        }
+        m_actors.push_back(f);
+        numFood++;
+        m_numActors++;
+
+        cerr << "adding food..." << endl;
+    }
 
     /*
     3. Add min(5 * L, 25) food objects to the Petri dish at random locations, in a manner
@@ -215,12 +270,18 @@ void StudentWorld::addDirt()
         xPos = randInt(0, VIEW_WIDTH);
         yPos = randInt(0, VIEW_HEIGHT);
 
-        if (distApart(xPos, yPos) > 120.0) //gets random number within dist
-            continue;
+        DirtPile* d = new DirtPile(this, xPos, yPos);
 
-        m_actors.push_back(new DirtPile(this, xPos, yPos));
+        if (distApart(xPos, yPos) > 120.0 || overlap(d)) //gets random number within dist
+        {
+            delete d;
+            continue;
+        }
+        m_actors.push_back(d);
         numDirt++;
         m_numActors++;
+
+        cerr << "adding dirt..." << endl;
     }
     cout << "DIRT: " << numDirt << endl;
 
@@ -235,38 +296,70 @@ object must be no more 120 pixels from the center of the Petri dish which is at
 
 }
 
-double StudentWorld::distApart(int x1, int y1, int x2, int y2) const //returns the dist between passed coords or center
+
+//Playtime functions:
+double StudentWorld::distApart(double x1, double y1, double x2, double y2) const //returns the dist between passed coords or center
 {
-    int xDist = abs(x1 - x2);
-    int yDist = abs(y1 - y2);
+    double xDist = abs(x1 - x2);
+    double yDist = abs(y1 - y2);
 
     double absDist = sqrt(pow(xDist, 2) + pow(yDist, 2));
 
     return absDist;
 }
 
-
-<<<<<<< HEAD
-bool StudentWorld::overlap(Actor* a1, int overlapDist)
-=======
-bool StudentWorld::overlap(Actor* a1)
->>>>>>> master
+double StudentWorld::getTheta(Actor* a, Actor* b) const
 {
+    if (b == nullptr)
+        b = m_socrates;
+
+    int deltaY = b->getY() - a->getY();
+    int deltaX = b->getX() - a->getX();
+    double dist = distApart(a->getX(), a->getY(), b->getX(), b->getY());
+
+    double theta = abs(asin(deltaY/dist));
+
+    //cerr << "THETA: " << theta << endl;
+    //cerr << "deltaY: " << deltaY << endl;
+    //cerr << "deltaX: " << deltaX << endl;
+    //cerr << "dist: " << dist << endl;
+
+    if (deltaY >= 0 && deltaX >= 0) //first quadrant
+        return theta;
+    else if (deltaY >= 0 && deltaX <= 0) //second quadrant
+        return (PI) - theta;
+    else if (deltaY <= 0 && deltaX <= 0) //third quadrant
+        return (PI) + theta;
+    else if (deltaY <= 0 && deltaX >= 0) //fourth quadrant
+        return (2 * PI) - theta;
+
+    return -1;
+}
+
+bool StudentWorld::overlap(Actor* a1, int overlapDist, int xpos, int ypos)
+{
+
     list<Actor*>::iterator it;
     it = m_actors.begin();
 
-<<<<<<< HEAD
     //if no arguments, use overlap on socrates
     if (a1 == nullptr)
         a1 = m_socrates;
+
+    if (!xpos)
+        xpos = a1->getX();
+    if (!ypos)
+        ypos = a1->getY();
 
     int k = 0;
 
     while (it != m_actors.end()) // notice: no it++
     {
-        if (a1 != *it && distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= overlapDist)
+        if (a1 != *it && distApart(xpos, ypos, (*it)->getX(), (*it)->getY()) <= overlapDist)
         {
             m_overlapActorIt = it;
+
+            //cerr << xpos << "  " << ypos << endl;
             //cerr << "OKAY: " << k << endl;
             //cerr << "OKAY2: " << a1->getX() << endl;
             //cerr << "OKAY3: " << (*it)->getX() << endl;
@@ -281,6 +374,20 @@ bool StudentWorld::overlap(Actor* a1)
 
 }
 
+bool StudentWorld::playerOverlap()
+{
+    if (overlap() && (*m_overlapActorIt)->consumable() && (*m_overlapActorIt)->destructible())
+    {
+        if(!(*m_overlapActorIt)->damageToPlayer())
+            playSound(SOUND_GOT_GOODIE);
+        else
+            playSound(SOUND_PLAYER_HURT);
+        (*m_overlapActorIt)->overlap();
+        return true;
+    }
+    return false;
+}
+
 bool StudentWorld::dirtOverlap(Actor* p)
 {
     if (true);
@@ -292,16 +399,82 @@ bool StudentWorld::projectileOverlap(Projectile* p)
 {
     if (overlap(p) && (*m_overlapActorIt)->destructible())
     {
+        Food* b = nullptr;
+        addNewActor(b, this, p->getX(), p->getY());
+
         (*m_overlapActorIt)->takeDamage(p->damageGiven());
+        p->setDead();
         return true;
     }
     return false;
 }
 
+//NEEDS TESTING
 bool StudentWorld::bacteriaOverlap(Bacteria* b)
 {
-    if (true);
+    if (bacteriaOnPlayer(b))
+        return true;
+    else if (bacteriaOnFood(b))
+        return true;
+    else if (bacteriaOnDirt(b))
+        return true;
+    else return false;
+}
 
+//START BACTERIA AUXILIARY FUNCTIONS
+
+bool StudentWorld::bacteriaOnPlayer(Bacteria* b)
+{
+    //if on a player
+    if (distApart(b->getX(), b->getY(), m_socrates->getX(), m_socrates->getY()) <= SPRITE_WIDTH)
+    {
+        playSound(SOUND_PLAYER_HURT);
+        m_socrates->takeDamage(b->damageToPlayer());
+        return true;
+    }
+    else
+        return false;
+}
+
+bool StudentWorld::bacteriaOnFood(Bacteria* b)
+{
+    //if on food
+    if (overlap(b, SPRITE_WIDTH / 2) && (*m_overlapActorIt)->consumable() && !(*m_overlapActorIt)->destructible())
+    {
+        (*m_overlapActorIt)->setDead(); //tell food it's dead
+        b->eatMitosis(); //increase food/ make more bacteria
+        return true;
+    }
+    else
+        return false;
+}
+
+bool StudentWorld::bacteriaOnDirt(Bacteria* b)
+{
+    double nextx = 0;
+    double nexty = 0;
+    b->getPositionInThisDirection(b->getDirection(), 3, nextx, nexty);
+
+    //if on a dirt
+    if (overlap(b, SPRITE_WIDTH / 2, nextx, nexty)
+        && !(*m_overlapActorIt)->consumable()
+        && !(*m_overlapActorIt)->damageToPlayer()
+        && (*m_overlapActorIt)->destructible())
+    {
+        b->dirtBlocked(true);
+        return true;
+    }
+    else
+        b->dirtBlocked(false);
+
+    return false;
+}
+
+// END BACTERIA AUXILIARY FUNCTIONS
+
+bool StudentWorld::consumableOverlap(Consumable* c)
+{
+    c->applyEffect(m_socrates);
     return true;
 }
 
@@ -314,7 +487,8 @@ void StudentWorld::addFungus()
     {
         int x = 0;
         int y = 0;
-        int theta = randInt(0, 369);
+        int theta = randInt(0, 359);
+
         m_socrates->polarToCartesian(x, y, theta);
         x += VIEW_WIDTH / 2;
         y += VIEW_HEIGHT / 2;
@@ -333,7 +507,12 @@ void StudentWorld::addGoodies()
 
         int x = 0;
         int y = 0;
-        int theta = randInt(0, 369);
+        int theta = randInt(0, 359);
+        /*do {
+            theta = randInt(0, 359);
+        } while (theta %  != 0);
+        */
+
         m_socrates->polarToCartesian(x, y, theta);
         x += VIEW_WIDTH / 2;
         y += VIEW_HEIGHT / 2;
@@ -348,24 +527,62 @@ void StudentWorld::addGoodies()
             m_actors.push_back(new HealthG(this, x, y));
     }
 }
-=======
-    while (it != m_actors.end()) // notice: no it++
+
+
+//finds closest food and returns dist 
+bool StudentWorld::findFood(Bacteria* b, double& newdir)
+{
+    
+    list<Actor*> tempFood;
+    list<Actor*>::iterator it;
+
+    //add all food to list
+    for (it = m_actors.begin(); it != m_actors.end();) // notice: no it++
     {
-        if (distApart(a1->getX(), a1->getY(), (*it)->getX(), (*it)->getY()) <= SPRITE_WIDTH)
-            return true;
+        if ((*it)->consumable() && !(*it)->destructible()) //check if food
+            tempFood.push_back(*it);
+        it++; // iterate through list
+        //cerr << "running forever" << endl;
+    }
+
+    if (tempFood.empty())
+    {
+        return false;
+    }
+
+    Actor* closest = *tempFood.begin();
+
+    for (it = tempFood.begin(); it != tempFood.end();)
+    {
+        if (distApart(b->getX(), b->getY(), (*it)->getX(), (*it)->getY() 
+            < distApart(b->getX(), b->getY(), closest->getX(), closest->getY()) ))
+        {
+            closest = *it;
+        }
         it++;
     }
-    return false;
 
+    if (distApart(b->getX(), b->getY(), closest->getX(), closest->getY()) >= 128)
+        return false;
+    else
+    {
+        newdir = getTheta(b, closest);
+        //cerr << "studentworld newdir in radians: " << newdir << endl;
+        radiansToDegrees(newdir);
 
+        //cerr << "studentworld newdir : " << newdir << endl;
+        return true;
+    }
 }
 
+void StudentWorld::findSocrates(double& sx, double& sy)
+{
+    sx = m_socrates->getX();
+    sy = m_socrates->getY();
+}
 
->>>>>>> master
 //  GAMEWORLD FUNCTIONS? HERE:
 /*
-
-
 
 unsigned int getLevel() const;
 unsigned int getLives() const;

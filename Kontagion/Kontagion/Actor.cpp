@@ -29,6 +29,7 @@ void Actor::polarToCartesian(int& x, int& y, int theta, int r)
 }
 
 
+
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
@@ -139,11 +140,7 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter--;
 
-<<<<<<< HEAD
             //printStats(x, y);
-=======
-            printStats(x, y);
->>>>>>> master
 
             break;
 
@@ -157,11 +154,7 @@ void setDirection(Direction d); // in degrees (0-359)
             moveTo(x, y);
             m_counter++;
 
-<<<<<<< HEAD
             //printStats(x, y);
-=======
-            printStats(x, y);
->>>>>>> master
 
             break;
 
@@ -169,22 +162,12 @@ void setDirection(Direction d); // in degrees (0-359)
             if (m_sprayCharge >= 1)
             {
                 getPositionInThisDirection(getDirection(), SPRITE_WIDTH, dx, dy);
-<<<<<<< HEAD
                 //printStats(x, y);
                 //std::cerr << dx << " " << dy << std::endl;;
-=======
-                printStats(x, y);
-                std::cerr << dx << " " << dy << std::endl;;
->>>>>>> master
                 getWorld()->addNewActor(spray, getWorld(), dx, dy, getDirection());
                 getWorld()->playSound(SOUND_PLAYER_SPRAY);
                 m_sprayCharge--;
             }
-<<<<<<< HEAD
-=======
-            m_rechargeDelay = true;
-
->>>>>>> master
             break;
 
         case KEY_PRESS_ENTER:
@@ -204,16 +187,17 @@ void setDirection(Direction d); // in degrees (0-359)
             break;
         }
     }
-<<<<<<< HEAD
     else if (m_sprayCharge < 20)
         m_sprayCharge++;
-=======
-    else if (m_sprayCharge < 20 && !m_rechargeDelay)
-        m_sprayCharge++;
-    m_rechargeDelay = false;
->>>>>>> master
 
     //std::cerr << "SprayCharge: " << m_sprayCharge << std::endl << std::endl;
+}
+
+void Socrates::takeDamage(int damage)
+{
+    std::cerr << m_health << std::endl;
+    std::cerr << damage << std::endl;
+    m_health -= damage;
 }
 
 bool Socrates::overlap()
@@ -260,56 +244,6 @@ void DirtPile::doSomething()
 
 }
 
-////////////////////////////////////////////////////////////
-/////////////////END IMPLEMENTATION/////////////////////////
-////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////
-/////////////////PROJECTILE CLASS IMPLEMENTATION////////////
-////////////////////////////////////////////////////////////
-
-void Projectile::move()
-{
-    moveAngle(getDirection(), SPRITE_WIDTH);
-    m_distanceLeft -= SPRITE_WIDTH;
-    //std::cerr << "distLeft: " << m_distanceLeft << std::endl;
-}
-
-////////////////////////////////////////////////////////////
-/////////////////END IMPLEMENTATION/////////////////////////
-////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////
-/////////////////SPRAY CLASS IMPLEMENTATION/////////////////
-////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////
-/////////////////END IMPLEMENTATION/////////////////////////
-////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////
-/////////////////FLAME CLASS IMPLEMENTATION/////////////////
-////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////
-/////////////////END IMPLEMENTATION/////////////////////////
-////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////
-/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
-////////////////////////////////////////////////////////////
-
-
-void Pit::doSomething()
-{
-
-}
-
 bool DirtPile::overlap()
 {
     if (getWorld()->dirtOverlap(this))
@@ -323,7 +257,6 @@ bool DirtPile::overlap()
 
 
 ////////////////////////////////////////////////////////////
-<<<<<<< HEAD
 /////////////////PROJECTILE CLASS IMPLEMENTATION////////////
 ////////////////////////////////////////////////////////////
 
@@ -341,15 +274,6 @@ void Projectile::move()
 bool Projectile::overlap()
 {
     return getWorld()->projectileOverlap(this);
-=======
-/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
-////////////////////////////////////////////////////////////
-
-
-void Salmonella::doSomething()
-{
-
->>>>>>> master
 }
 
 ////////////////////////////////////////////////////////////
@@ -358,27 +282,15 @@ void Salmonella::doSomething()
 
 
 ////////////////////////////////////////////////////////////
-<<<<<<< HEAD
 /////////////////SPRAY CLASS IMPLEMENTATION/////////////////
 ////////////////////////////////////////////////////////////
 
-=======
-/////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
-////////////////////////////////////////////////////////////
-
-void AggroSalmonella::doSomething()
-{
-
-}
-
->>>>>>> master
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////
-<<<<<<< HEAD
 /////////////////FLAME CLASS IMPLEMENTATION/////////////////
 ////////////////////////////////////////////////////////////
 
@@ -417,6 +329,12 @@ inventory.
 e. It (or some other object) must play a sound effect to indicate that the
 bacterium was just born: SOUND_BACTERIUM_BORN.
     */
+
+    if (m_numSal + m_numASal + m_numEColi <= 0)
+    {
+        setDead();
+        return false;
+    }
 
     int spawnBacteria = randInt(0, 49);
 
@@ -481,13 +399,30 @@ bool Bacteria::overlap()
     return getWorld()->bacteriaOverlap(this);
 }
 
+bool Bacteria::isDead() const
+{
+    if (m_bacteriaHp <= 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+void Bacteria::takeDamage(int damage)
+{
+    getWorld()->playSound(m_hurtSound);
+    m_bacteriaHp -= damage;
+}
+
+///
+///
 
 void Salmonella::doSomething()
 {
     if (isDead())
         return;
 
-    cerr << "MOVE PLAN DIST: " << getMovePlanDist() <<  endl;
+    //cerr << "MOVE PLAN DIST: " << getMovePlanDist() <<  endl;
 
     overlap();
 
@@ -497,7 +432,7 @@ void Salmonella::doSomething()
 
     if (getMovePlanDist() > 0)
     {
-        cerr << "move plan > 0" << endl;
+        //cerr << "move plan > 0" << endl;
         decMovePlan();
 
         getPositionInThisDirection(getDirection(), 3, newx, newy);
@@ -505,12 +440,12 @@ void Salmonella::doSomething()
         //if not blocked:
         if (!getBlocked() && getWorld()->distApart(newx, newy) < VIEW_RADIUS)
         {
-            cerr << "not blocked" << endl;
+            //cerr << "not blocked" << endl;
             moveTo(newx, newy);
         }
         else
         {
-            cerr << "blocked" << endl;
+            //cerr << "blocked" << endl;
             setDirection(randInt(0, 359)); //sets new dir randomly
             resetMovePlan(); //resets movement plan to 10
         }
@@ -518,20 +453,20 @@ void Salmonella::doSomething()
     }
     else if (getWorld()->findFood(this, newdir))
     {
-        cerr << "Finding food, newdir: " << newdir << endl;
+        //cerr << "Finding food, newdir: " << newdir << endl;
         setDirection(newdir);
 
         overlap(); //check again if blocked by dirt
 
         if (!getBlocked())
         {
-            cerr << "not blocked" << endl;
+            //cerr << "not blocked" << endl;
             resetMovePlan();
             return;
         }
         else
         {
-            cerr << "found food but blocked" << endl;
+            //cerr << "found food but blocked" << endl;
             setDirection(randInt(0, 359));
             resetMovePlan();
             return;
@@ -539,7 +474,7 @@ void Salmonella::doSomething()
     }
     else
     {
-        cerr << "move plan < 0, no food" << endl;
+        //cerr << "move plan < 0, no food" << endl;
         setDirection(randInt(0, 359));
         resetMovePlan();
         return;
@@ -597,31 +532,9 @@ iii. Immediately return.
 
 void Salmonella::eatMitosis()
 {
-    if (foodEaten() >= 3)
-    {
-        Salmonella* s = nullptr;
-
-        int newx = 0;
-        int newy = 0;
-
-        if (getX() < VIEW_WIDTH / 2)
-            newx = getX() + SPRITE_WIDTH;
-        else if (getX() > VIEW_WIDTH / 2)
-            newx = getX() - SPRITE_WIDTH;
-        else
-            newx = getX();
-
-
-        if (getY() < VIEW_HEIGHT / 2)
-            newy = getY() + SPRITE_WIDTH;
-        else if (getY() > VIEW_HEIGHT / 2)
-            newy = getY() - SPRITE_WIDTH;
-        else
-            newy = getY();
-
-        getWorld()->addNewActor(s, getWorld(), newx, newy, getDirection());
-        resetEaten();
-    }
+    Salmonella* s = nullptr;
+    if (mitosis(s))
+        return;
     else
         eat();
 }
@@ -641,35 +554,109 @@ void AggroSalmonella::doSomething()
         return;
 
     overlap();
+
+    double sx = 0;
+    double sy = 0;
+
+    double newx = 0;
+    double newy = 0;
+    double newdir = 0;
+
+    bool foundPlayer = false;
+
+    getWorld()->findSocrates(sx, sy);
+    if (getWorld()->distApart(getX(), getY(), sx, sy) <= 72.0) //if dist from socrates <= 72
+    {
+        double newdir = getWorld()->getTheta(this);
+        getWorld()->radiansToDegrees(newdir);
+        setDirection(newdir); //set dir in dir of socrates
+        getPositionInThisDirection(newdir, 3, newx, newy); // move in dir of socrates
+        getWorld()->bacteriaOnDirt(this); //check if blocked by dirt
+
+        //cerr << "found socrates: " << endl;
+        //cerr << "newdir: " << newdir << endl;
+        //cerr << "newx: " << newx << endl;
+        //cerr << "newy: " << newy << endl;
+
+
+        if (!getBlocked())
+        {
+            cerr << "hunting socrates" << endl;
+            moveTo(newx, newy);
+        }
+        foundPlayer = true; //skip later step if socrates found
+    }
+
+    if (getWorld()->bacteriaOnPlayer(this)) //damage to socrates will be taken care of by studentworld
+    {
+        if (foundPlayer)
+            return;
+    }
+    else if (mitosis(this))
+    {
+        if (foundPlayer)
+            return;
+    }
+    else
+        getWorld()->bacteriaOnFood(this);
+
+    if (!foundPlayer)
+    {
+        if (getMovePlanDist() > 0) //if movement plan > 0 ...
+        {
+            //cerr << "move plan > 0" << endl;
+            decMovePlan(); //decrease move plan
+
+            getPositionInThisDirection(getDirection(), 3, newx, newy);
+
+            getWorld()->bacteriaOnDirt(this);
+            //if not blocked:
+            if (!getBlocked() && getWorld()->distApart(newx, newy) < VIEW_RADIUS)
+            {
+                //cerr << "not blocked" << endl;
+                moveTo(newx, newy);
+            }
+            else
+            {
+                //cerr << "blocked" << endl;
+                setDirection(randInt(0, 359)); //sets new dir randomly
+                resetMovePlan(); //resets movement plan to 10
+            }
+            return;
+        }
+        else if (getWorld()->findFood(this, newdir))
+        {
+            //cerr << "Finding food, newdir: " << newdir << endl;
+            setDirection(newdir);
+
+            getWorld()->bacteriaOnDirt(this); //check again if blocked by dirt
+
+            if (getBlocked())
+            {
+                //cerr << "found food but blocked" << endl;
+                setDirection(randInt(0, 359));
+                resetMovePlan();
+                return;
+            }
+
+            moveAngle(getDirection(), 3);
+
+        }
+        else
+        {
+            //cerr << "move plan < 0, no food" << endl;
+            setDirection(randInt(0, 359));
+            resetMovePlan();
+            return;
+        }
+    }
 }
 
 void AggroSalmonella::eatMitosis()
 {
-    if (foodEaten() >= 3)
-    {
-        AggroSalmonella* aS = nullptr;
-
-        int newx = 0;
-        int newy = 0;
-
-        if (getX() < VIEW_WIDTH / 2)
-            newx = getX() + SPRITE_WIDTH;
-        else if (getX() > VIEW_WIDTH / 2)
-            newx = getX() - SPRITE_WIDTH;
-        else
-            newx = getX();
-
-
-        if (getY() < VIEW_HEIGHT / 2)
-            newy = getY() + SPRITE_WIDTH;
-        else if (getY() > VIEW_HEIGHT / 2)
-            newy = getY() - SPRITE_WIDTH;
-        else
-            newy = getY();
-
-        getWorld()->addNewActor(aS, getWorld(), newx, newy, getDirection());
-        resetEaten();
-    }
+    AggroSalmonella* aS = nullptr;
+    if (mitosis(aS))
+        return;
     else
         eat();
 }
@@ -680,14 +667,11 @@ void AggroSalmonella::eatMitosis()
 
 
 ////////////////////////////////////////////////////////////
-=======
->>>>>>> master
 /////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
 ////////////////////////////////////////////////////////////
 
 
 void EColi::doSomething()
-<<<<<<< HEAD
 {
     if (isDead())
         return;
@@ -697,31 +681,9 @@ void EColi::doSomething()
 
 void EColi::eatMitosis()
 {
-    if (foodEaten() >= 3)
-    {
-        EColi* eC = nullptr;
-
-        int newx = 0;
-        int newy = 0;
-
-        if (getX() < VIEW_WIDTH / 2)
-            newx = getX() + SPRITE_WIDTH;
-        else if (getX() > VIEW_WIDTH / 2)
-            newx = getX() - SPRITE_WIDTH;
-        else
-            newx = getX();
-
-
-        if (getY() < VIEW_HEIGHT / 2)
-            newy = getY() + SPRITE_WIDTH;
-        else if (getY() > VIEW_HEIGHT / 2)
-            newy = getY() - SPRITE_WIDTH;
-        else
-            newy = getY();
-
-        getWorld()->addNewActor(eC, getWorld(), newx, newy, getDirection());
-        resetEaten();
-    }
+    EColi* ec = nullptr;
+    if (mitosis(ec))
+        return;
     else
         eat();
 }
@@ -770,34 +732,24 @@ void Food::applyEffect(Socrates* s)
 void FlameG::applyEffect(Socrates* s)
 {
     s->incFlame();
-    getWorld()->playSound(SOUND_GOT_GOODIE);
 }
 
 void HealthG::applyEffect(Socrates* s)
 {
     s->restoreHealth();
-    getWorld()->playSound(SOUND_GOT_GOODIE);
 }
 
 void LifeG::applyEffect(Socrates* s)
 {
     s->incLife();
-    getWorld()->playSound(SOUND_GOT_GOODIE);
 }
 
 void Fungus::applyEffect(Socrates* s)
 {
     s->takeDamage(damageToPlayer());
-    getWorld()->playSound(SOUND_PLAYER_HURT);
 }
 
 
-=======
-{
-
-}
-
->>>>>>> master
 ////////////////////////////////////////////////////////////
 /////////////////END IMPLEMENTATION/////////////////////////
 ////////////////////////////////////////////////////////////

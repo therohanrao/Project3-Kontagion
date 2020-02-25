@@ -8,10 +8,14 @@
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
+const double PI = 4 * atan(1);
+
 class Actor;
 class Socrates;
+class DirtPile;
 class Bacteria;
 class Projectile;
+class Consumable;
 
 class StudentWorld : public GameWorld
 {
@@ -25,43 +29,64 @@ public:
 
 
     //x2 & y2 set to center of circle default
-    double distApart(int x1, int y1, int x2 = VIEW_WIDTH/2, int y2 = VIEW_HEIGHT/2) const;
+    double distApart(double x1, double y1, double x2 = VIEW_WIDTH/2, double y2 = VIEW_HEIGHT/2) const;
+    //gets theta respect to b or default (socrates)
+    double getTheta(Actor* a, Actor* b = nullptr) const;
 
-<<<<<<< HEAD
-    bool overlap(Actor* a1 = nullptr, int overlapDist = SPRITE_WIDTH);
-=======
-    bool overlap(Actor* a1);
->>>>>>> master
+    bool overlap(Actor* a1 = nullptr, int overlapDist = SPRITE_WIDTH, int xpos = 0, int ypos = 0);
     
     //GODLY:
     template<typename ActorType>
-    void addNewActor(ActorType* &a, StudentWorld* world, int x, int y, int dir = 0)
+    void addNewActor(ActorType* a, StudentWorld* world, int x, int y, int dir = 0)
     {
         a = new ActorType(world, x, y, dir);
         m_actors.push_back(a);
-        std::cerr << "new actor added..." << std::endl;
+        //std::cerr << "new actor added..." << std::endl;
     }
 
-<<<<<<< HEAD
+    template<typename numberType>
+    void degreesToRadians(numberType &n)
+    {
+        n = n * (PI / 180);
+    }
+
+    template<typename numberType>
+    void radiansToDegrees(numberType& n)
+    {
+        n = n * (180 / PI);
+    }
+
+    bool playerOverlap();
+
     bool dirtOverlap(Actor* d);
     bool projectileOverlap(Projectile* p);
     bool bacteriaOverlap(Bacteria* b);
-=======
->>>>>>> master
+    bool consumableOverlap(Consumable* c);
+
+    bool findFood(Bacteria* b, double& newdir);
+
+    void findSocrates(double& sx, double& sy);
+
+    //auxiliary functions:
+
+    //bacteria
+    bool bacteriaOnPlayer(Bacteria* b);
+    bool bacteriaOnDirt(Bacteria* b);
+    bool bacteriaOnFood(Bacteria* b);
 
 private:
 
     //move these three to private later: 
     //SHOULD THIS BE IN PRIVATE THO??
+
+    //init functions
     void addPits();
     void addDirt();
     void addFood();
 
-<<<<<<< HEAD
+    //runtime functions
     void addFungus();
     void addGoodies();
-=======
->>>>>>> master
 
     Socrates* m_socrates;
 
