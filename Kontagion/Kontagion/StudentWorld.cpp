@@ -150,8 +150,9 @@ etc.).
                 playsound = 1;
             else if ((*actorsIt)->damageToPlayer() && (*actorsIt)->consumable() && dist <= SPRITE_WIDTH)
                 playsound = 2;
+            if ((*actorsIt)->getDeathSound())
+                playSound((*actorsIt)->getDeathSound());
 
-            playSound((*actorsIt)->getDeathSound());
             delete *actorsIt; //if so, delete
             *actorsIt = nullptr;
             actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
@@ -175,7 +176,10 @@ etc.).
     }
 
     if (bacteriaCounter == 0 && pitCounter == 0)
+    {
+        playSound(SOUND_FINISHED_LEVEL);
         return GWSTATUS_FINISHED_LEVEL;
+    }
 
     m_socrates->doSomething(); //must be after all object's doSomething()!!!
     if (m_socrates->isDead())
