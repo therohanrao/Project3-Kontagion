@@ -162,8 +162,6 @@ void setDirection(Direction d); // in degrees (0-359)
             if (m_sprayCharge >= 1)
             {
                 getPositionInThisDirection(getDirection(), SPRITE_WIDTH, dx, dy);
-                //printStats(x, y);
-                //std::cerr << dx << " " << dy << std::endl;;
                 getWorld()->addNewActor(spray, getWorld(), dx, dy, getDirection());
                 getWorld()->playSound(SOUND_PLAYER_SPRAY);
                 m_sprayCharge--;
@@ -179,7 +177,7 @@ void setDirection(Direction d); // in degrees (0-359)
                     getWorld()->addNewActor(flame, getWorld(), dx, dy, getDirection() + i);
                 }
                 getWorld()->playSound(SOUND_PLAYER_FIRE);
-                //m_flameCharge--; UNCOMMENT THIS LATER!!!!!
+                m_flameCharge--; //UNCOMMENT THIS LATER!!!!!
             }
             break;
 
@@ -189,20 +187,26 @@ void setDirection(Direction d); // in degrees (0-359)
     }
     else if (m_sprayCharge < 20)
         m_sprayCharge++;
-
-    //std::cerr << "SprayCharge: " << m_sprayCharge << std::endl << std::endl;
 }
 
 void Socrates::takeDamage(int damage)
 {
-    std::cerr << m_health << std::endl;
-    std::cerr << damage << std::endl;
     m_health -= damage;
 }
 
 bool Socrates::overlap()
 {
     return getWorld()->playerOverlap();
+}
+
+void Socrates::incFlame()
+{
+    m_flameCharge += 5;
+}
+
+void Socrates::restoreHealth()
+{
+    m_health = 100;
 }
 
 void Socrates::incLife()
@@ -246,9 +250,7 @@ void DirtPile::doSomething()
 
 bool DirtPile::overlap()
 {
-    if (getWorld()->dirtOverlap(this))
-        setDead();
-    return true;
+    return false;
 }
 
 ////////////////////////////////////////////////////////////
@@ -374,7 +376,7 @@ bacterium was just born: SOUND_BACTERIUM_BORN.
                 if (m_numEColi)
                 {
                     getWorld()->addNewActor(ec, getWorld(), getX(), getY(), 90);
-                    m_numEColi;
+                    m_numEColi--;
                     return true;
                 }
                 break;
@@ -581,8 +583,11 @@ void AggroSalmonella::doSomething()
 
         if (!getBlocked())
         {
-            cerr << "hunting socrates" << endl;
-            moveTo(newx, newy);
+            //cerr << "hunting socrates" << endl;
+            if (getWorld()->distApart(getX(), getY(), sx, sy) > SPRITE_WIDTH)
+                moveTo(newx, newy);
+            //else
+                //moveTo(sx, sy);
         }
         foundPlayer = true; //skip later step if socrates found
     }
@@ -673,10 +678,51 @@ void AggroSalmonella::eatMitosis()
 
 void EColi::doSomething()
 {
+    //1:
     if (isDead())
         return;
 
-    overlap();
+    //overlap();
+
+    double sx;
+    double sy;
+
+    //2:
+    if (getWorld()->bacteriaOnPlayer(this))
+        ;//cerr << "ecoli on player" << endl;
+    else if (mitosis(this))
+    {
+        ;//cerr << "ecoli splitting" << endl;
+    }
+    else if (getWorld()->bacteriaOnFood(this))
+    {
+        ;//cerr << "ecoli eating" << endl;
+    }
+
+    getWorld()->findSocrates(sx, sy);
+        
+    if (getWorld()->distApart(getX(), getY(), sx, sy) <= 256.0)
+    {
+        double newdir = getWorld()->getTheta(this);
+        getWorld()->radiansToDegrees(newdir);
+        int tries = 0;
+        while (getWorld()->bacteriaOnDirt(this, 2, newdir) && tries < 10)
+        {
+            newdir += 10;
+            tries++;
+        }
+
+        if (getWorld()->distApart(getX(), getY(), sx, sy) <= SPRITE_WIDTH/2)
+        {
+            moveTo(sx, sy);
+        }
+        else if (tries < 10)
+        {
+            setDirection(newdir);
+            moveAngle(newdir, 2);
+        }
+    }
+     
 }
 
 void EColi::eatMitosis()
@@ -697,10 +743,6 @@ void EColi::eatMitosis()
 /////////////////DIRTPILE CLASS IMPLEMENTATION//////////////
 ////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////
-/////////////////END IMPLEMENTATION/////////////////////////
-////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////
@@ -731,21 +773,25 @@ void Food::applyEffect(Socrates* s)
 
 void FlameG::applyEffect(Socrates* s)
 {
+    getWorld()->increaseScore(300);
     s->incFlame();
 }
 
 void HealthG::applyEffect(Socrates* s)
 {
+    getWorld()->increaseScore(250);
     s->restoreHealth();
 }
 
 void LifeG::applyEffect(Socrates* s)
 {
+    getWorld()->increaseScore(500);
     s->incLife();
 }
 
 void Fungus::applyEffect(Socrates* s)
 {
+    getWorld()->increaseScore(-50);
     s->takeDamage(damageToPlayer());
 }
 

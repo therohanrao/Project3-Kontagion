@@ -170,15 +170,14 @@ public:
 		return false;
 	}
 
-	void incFlame()
-	{
-		m_flameCharge += 5;
-	}
+	void incFlame();
 
-	void restoreHealth() 
-	{ 
-		m_health = 100;
-	}
+	void restoreHealth();
+
+	int getHealth() { return m_health; }
+	int getSprays() { return m_sprayCharge; }
+	int getFlames() { return m_flameCharge; }
+
 
 	void incLife();
 
@@ -347,11 +346,10 @@ public:
 	Pit(StudentWorld* world, double startX, double startY, int dir = 0)
 		: Actor(world, IID_PIT, startX, startY, dir) //ImageID: Spray, ..., depth:0
 	{
-		m_numSal = 0; //should be 5
-		m_numASal = 5; //should be 3
-		m_numEColi = 0; //should be 2
+		m_numSal = 5; //should be 5
+		m_numASal = 3; //should be 3
+		m_numEColi = 2; //should be 2
 	}
-
 	virtual bool isDead()
 	{
 		if (m_numSal + m_numASal + m_numEColi <= 0)
@@ -386,7 +384,7 @@ class Bacteria : public Actor
 public:
 	Bacteria(StudentWorld* world, int imageID, double startX, double startY, int dir, int health, int playerdamage, 
 		int hurtSound = SOUND_SALMONELLA_HURT, int deathSound = SOUND_SALMONELLA_DIE)
-		: Actor(world, imageID, startX, startY, dir) //ImageID: Spray, ..., depth:0
+		: Actor(world, imageID, startX, startY, dir, 0) //ImageID: Spray, ..., depth:0
 	{
 		m_deathSound = deathSound;
 		m_hurtSound = hurtSound;
@@ -514,7 +512,7 @@ class Salmonella : public Bacteria
 {
 public:
 	Salmonella(StudentWorld* world, double startX, double startY, int dir = 90)
-		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 4, 1) //ImageID: Spray, ..., hp: 4, damage: 1
+		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 4, 1) //ImageID: Spray, ..., hp: 4, damage: 1, score: 100
 	{
 
 	}
@@ -563,7 +561,7 @@ class EColi : public Bacteria
 {
 public:
 	EColi(StudentWorld* world, double startX, double startY, int dir)
-		: Bacteria(world, IID_SALMONELLA, startX, startY, dir, 5, 4, SOUND_ECOLI_HURT, SOUND_ECOLI_DIE) //ImageID: EColi, ..., health: 5, playerdamage: 4
+		: Bacteria(world, IID_ECOLI, startX, startY, dir, 5, 4, SOUND_ECOLI_HURT, SOUND_ECOLI_DIE) //ImageID: EColi, ..., health: 5, playerdamage: 4
 	{
 
 	}
@@ -609,7 +607,7 @@ public:
 			return true;
 		if (m_ticksAlive >= m_maxAge)
 		{
-			std::cerr << "fungus killed" << std::endl;
+			//std::cerr << "fungus killed" << std::endl;
 			return true;
 		}
 		return false;

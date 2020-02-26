@@ -29,12 +29,12 @@ public:
 
 
     //x2 & y2 set to center of circle default
-    double distApart(double x1, double y1, double x2 = VIEW_WIDTH/2, double y2 = VIEW_HEIGHT/2) const;
+    double distApart(double x1, double y1, double x2 = VIEW_WIDTH / 2, double y2 = VIEW_HEIGHT / 2) const;
     //gets theta respect to b or default (socrates)
     double getTheta(Actor* a, Actor* b = nullptr) const;
 
     bool overlap(Actor* a1 = nullptr, int overlapDist = SPRITE_WIDTH, int xpos = 0, int ypos = 0);
-    
+
     //GODLY:
     template<typename ActorType>
     void addNewActor(ActorType* a, StudentWorld* world, int x, int y, int dir = 0)
@@ -45,7 +45,7 @@ public:
     }
 
     template<typename numberType>
-    void degreesToRadians(numberType &n)
+    void degreesToRadians(numberType& n)
     {
         n = n * (PI / 180);
     }
@@ -56,9 +56,8 @@ public:
         n = n * (180 / PI);
     }
 
-    bool playerOverlap();
+    int playerOverlap();
 
-    bool dirtOverlap(Actor* d);
     bool projectileOverlap(Projectile* p);
     bool bacteriaOverlap(Bacteria* b);
     bool consumableOverlap(Consumable* c);
@@ -71,7 +70,7 @@ public:
 
     //bacteria
     bool bacteriaOnPlayer(Bacteria* b);
-    bool bacteriaOnDirt(Bacteria* b);
+    bool bacteriaOnDirt(Bacteria* b, double moveDist = 3, double dir = -1);
     bool bacteriaOnFood(Bacteria* b);
 
 private:
@@ -96,8 +95,9 @@ private:
 
     int m_numActors;
 
-    const int m_centerX = VIEW_WIDTH/2;
-    const int m_centerY = VIEW_HEIGHT/2;
+    const int m_centerX = VIEW_WIDTH / 2;
+    const int m_centerY = VIEW_HEIGHT / 2;
+
 };
 
 #endif // STUDENTWORLD_H_

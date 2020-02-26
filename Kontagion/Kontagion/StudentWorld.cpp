@@ -2,6 +2,9 @@
 #include <string>
 #include <cmath>
 #include <cassert>
+#include <iostream> // defines the overloads of the << operator
+#include <sstream>  // defines the type std::ostringstream
+#include <iomanip>
 
 #include "StudentWorld.h"
 #include "GameConstants.h"
@@ -28,6 +31,7 @@ StudentWorld::StudentWorld(string assetPath)
 StudentWorld::~StudentWorld()
 {
     delete m_socrates;
+    m_socrates = nullptr;
     cleanUp();
     cerr << "Destructor ran" << endl;
     //assert(m_actors.empty());
@@ -127,6 +131,8 @@ etc.).
  }
     */
 
+    int bacteriaCounter = 0;
+    int pitCounter = 0;
 
     list<Actor*>::iterator actorsIt;
 
@@ -135,15 +141,41 @@ etc.).
     {
         if ((*actorsIt)->isDead()) //check if dead
         {
+            if ((*actorsIt)->damageToPlayer() && !(*actorsIt)->consumable())
+                increaseScore(100);
+
+            int playsound = 0;
+            double dist = distApart((*actorsIt)->getX(), (*actorsIt)->getY(), m_socrates->getX(), m_socrates->getY());
+            if (!(*actorsIt)->damageToPlayer() && (*actorsIt)->consumable() && dist <= SPRITE_WIDTH)
+                playsound = 1;
+            else if ((*actorsIt)->damageToPlayer() && (*actorsIt)->consumable() && dist <= SPRITE_WIDTH)
+                playsound = 2;
+
             playSound((*actorsIt)->getDeathSound());
-            delete* actorsIt; //if so, delete
+            delete *actorsIt; //if so, delete
+            *actorsIt = nullptr;
             actorsIt = m_actors.erase(actorsIt); //erase object in list and return next in list 
-            //std::cerr << "killed something" << endl;
+
+            if (playsound == 1)
+                playSound(SOUND_GOT_GOODIE);
+            if (playsound == 2)
+                playSound(SOUND_PLAYER_HURT);
+
             continue;
         }
+
+        if ((*actorsIt)->damageToPlayer() && !(*actorsIt)->consumable())
+            bacteriaCounter++;
+
+        if (!(*actorsIt)->destructible() && !(*actorsIt)->consumable())
+            pitCounter++;
+
         (*actorsIt)->doSomething(); //call all doSomething for actors
         actorsIt++; // otherwise go to next pointer in list
     }
+
+    if (bacteriaCounter == 0 && pitCounter == 0)
+        return GWSTATUS_FINISHED_LEVEL;
 
     m_socrates->doSomething(); //must be after all object's doSomething()!!!
     if (m_socrates->isDead())
@@ -156,16 +188,15 @@ etc.).
     addFungus();
     addGoodies();
 
-    int input;
+    ostringstream gameText;
+    gameText.fill('0');
+    gameText << "Score: " << setw(6) << getScore() << "  Level: " << getLevel()
+        << "  Lives: " << getLives() << "  Health: " << m_socrates->getHealth()
+        << "  Sprays: " << m_socrates->getSprays()
+        << "  Flames: " << m_socrates->getFlames();
 
-    getKey(input);
+    setGameStatText(gameText.str());
 
-    if (input == KEY_PRESS_DOWN)
-    {
-        decLives();
-        return GWSTATUS_PLAYER_DIED;
-    }
-    else
         return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -176,10 +207,12 @@ void StudentWorld::cleanUp()
     for (actorsIt = m_actors.begin(); actorsIt != m_actors.end(); ) // notice: no it++
     {
         delete *actorsIt;
+        *actorsIt = nullptr;
         actorsIt = m_actors.erase(actorsIt);
     }
 
     delete m_socrates;
+    m_socrates = nullptr;
 
     cerr << "cleanUp ran" << endl;
 }
@@ -203,6 +236,7 @@ void StudentWorld::addPits()
         if (distApart(xPos, yPos) > 120.0 || overlap(p)) //gets random number within dist
         {
             delete p;
+            p = nullptr;
             continue;
         }
 
@@ -240,6 +274,7 @@ void StudentWorld::addFood()
         if (distApart(xPos, yPos) > 120.0 || overlap(f)) //gets random number within dist
         {
             delete f;
+            f = nullptr;
             continue;
         }
         m_actors.push_back(f);
@@ -275,6 +310,7 @@ void StudentWorld::addDirt()
         if (distApart(xPos, yPos) > 120.0 || overlap(d)) //gets random number within dist
         {
             delete d;
+            d = nullptr;
             continue;
         }
         m_actors.push_back(d);
@@ -374,33 +410,35 @@ bool StudentWorld::overlap(Actor* a1, int overlapDist, int xpos, int ypos)
 
 }
 
-bool StudentWorld::playerOverlap()
+int StudentWorld::playerOverlap()
 {
     if (overlap() && (*m_overlapActorIt)->consumable() && (*m_overlapActorIt)->destructible())
     {
-        if(!(*m_overlapActorIt)->damageToPlayer())
-            playSound(SOUND_GOT_GOODIE);
-        else
-            playSound(SOUND_PLAYER_HURT);
+        cerr << "PLAYER ON SOMETHING" << endl;
+
         (*m_overlapActorIt)->overlap();
-        return true;
+
+        if (!(*m_overlapActorIt)->damageToPlayer())
+        {
+            //playSound(SOUND_GOT_GOODIE);
+            return 1;
+        }
+        else
+        {
+            //playSound(SOUND_PLAYER_HURT);
+            return 2;
+        }
     }
-    return false;
+    return 0;
 }
 
-bool StudentWorld::dirtOverlap(Actor* p)
-{
-    if (true);
-
-    return true;
-}
 
 bool StudentWorld::projectileOverlap(Projectile* p)
 {
     if (overlap(p) && (*m_overlapActorIt)->destructible())
     {
-        Food* b = nullptr;
-        addNewActor(b, this, p->getX(), p->getY());
+        //Food* b = nullptr;
+        //addNewActor(b, this, p->getX(), p->getY());
 
         (*m_overlapActorIt)->takeDamage(p->damageGiven());
         p->setDead();
@@ -449,11 +487,15 @@ bool StudentWorld::bacteriaOnFood(Bacteria* b)
         return false;
 }
 
-bool StudentWorld::bacteriaOnDirt(Bacteria* b)
+bool StudentWorld::bacteriaOnDirt(Bacteria* b, double moveDist, double dir)
 {
     double nextx = 0;
     double nexty = 0;
-    b->getPositionInThisDirection(b->getDirection(), 3, nextx, nexty);
+
+    if (dir < 0)
+        dir = b->getDirection();
+
+    b->getPositionInThisDirection(dir, moveDist, nextx, nexty);
 
     //if on a dirt
     if (overlap(b, SPRITE_WIDTH / 2, nextx, nexty)
@@ -502,16 +544,12 @@ void StudentWorld::addGoodies()
     int chanceGoodie = max(510 - getLevel() * 10, 250);
     bool spawnGoodie = randInt(0, chanceGoodie);
 
-   if (!spawnGoodie) //HAVEN"T DONE TIMER FOR DEATH OF GOODIE
+   if (!spawnGoodie)
     {
 
         int x = 0;
         int y = 0;
         int theta = randInt(0, 359);
-        /*do {
-            theta = randInt(0, 359);
-        } while (theta %  != 0);
-        */
 
         m_socrates->polarToCartesian(x, y, theta);
         x += VIEW_WIDTH / 2;
