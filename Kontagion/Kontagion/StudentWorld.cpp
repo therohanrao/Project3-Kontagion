@@ -25,7 +25,6 @@ StudentWorld::StudentWorld(string assetPath)
     : GameWorld(assetPath)
 {
     m_socrates = nullptr;
-    m_numActors = 0;
 }
 
 StudentWorld::~StudentWorld()
@@ -246,7 +245,6 @@ void StudentWorld::addPits()
 
         m_actors.push_back(p);
         numPits++;
-        m_numActors++;
 
         cerr << "adding pits..." << endl;
     }
@@ -283,7 +281,6 @@ void StudentWorld::addFood()
         }
         m_actors.push_back(f);
         numFood++;
-        m_numActors++;
 
         cerr << "adding food..." << endl;
     }
@@ -319,7 +316,6 @@ void StudentWorld::addDirt()
         }
         m_actors.push_back(d);
         numDirt++;
-        m_numActors++;
 
         cerr << "adding dirt..." << endl;
     }
@@ -529,7 +525,7 @@ void StudentWorld::addFungus()
     int chanceFungus = max(510 - getLevel() * 10, 200);
     bool spawnFungus = randInt(0, chanceFungus);
 
-   if (!spawnFungus) //HAVEN"T DONE TIMER FOR DEATH OF FUNGUS
+   if (!spawnFungus)
     {
         int x = 0;
         int y = 0;

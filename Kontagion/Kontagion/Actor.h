@@ -64,11 +64,11 @@ public:
 	virtual void doSomething() = 0;
 
 	//pure virtual??
-	virtual bool overlap() 
-	{ 
-		std::cerr << " shouldnt be running this: actor::overlap()" << std::endl;
-			return true; 
-	} // make pure virtual
+	virtual bool overlap() = 0;
+	//{ 
+	//	std::cerr << " shouldnt be running this: actor::overlap()" << std::endl;
+	//		return true; 
+	//} // make pure virtual
 
 	virtual int damageToPlayer()
 	{
@@ -361,6 +361,11 @@ public:
 
 	virtual void takeDamage(int damage = 0) {};
 
+	virtual bool overlap()
+	{
+		return false;
+	}
+
 	bool spawnBacteria();
 
 	virtual void doSomething();
@@ -409,33 +414,34 @@ public:
 		return m_deathSound;
 	}
 
-	virtual bool overlap();
 
 	virtual void eatMitosis() = 0;
 
 	virtual void doSomething() = 0;
 
 
+	bool overlap();
+
 	//Movement Plan functions:
-	virtual int getMovePlanDist()
+	int getMovePlanDist()
 	{
 		return m_movePlanDist;
 	}
-	virtual void decMovePlan()
+	void decMovePlan()
 	{
 		m_movePlanDist--;
 	}
-	virtual void resetMovePlan()
+	void resetMovePlan()
 	{
 		//std::cerr << "MOVE PLAN RESET " << std::endl;
 		m_movePlanDist = 10;
 	}
 
-	virtual void dirtBlocked(bool blocked)
+	void dirtBlocked(bool blocked)
 	{
 		m_blocked = blocked;
 	}
-	virtual bool getBlocked() const
+	bool getBlocked() const
 	{
 		return m_blocked;
 	}
@@ -443,7 +449,6 @@ public:
 	//Food functions:
 
 	template <typename BacteriaType>
-
 	bool mitosis(BacteriaType* b)
 	{
 		if (foodEaten() >= 3)
@@ -474,16 +479,16 @@ public:
 			return false;
 	}
 
-	virtual int foodEaten() const
+	int foodEaten() const
 	{
 		return m_foodEaten;
 	}
 
-	virtual void eat()
+	void eat()
 	{
 		m_foodEaten++;
 	}
-	virtual void resetEaten()
+	void resetEaten()
 	{
 		m_foodEaten = 0;
 	}
@@ -596,21 +601,14 @@ public:
 		return true;
 	}
 
-	virtual void incTicksAlive()
-	{
-		m_ticksAlive++;
-	}
-
 	virtual bool isDead() const
 	{
 		if (Actor::isDead())
 			return true;
 		if (m_ticksAlive >= m_maxAge)
-		{
-			//std::cerr << "fungus killed" << std::endl;
 			return true;
-		}
-		return false;
+		else
+			return false;
 	}
 
 	virtual bool overlap();

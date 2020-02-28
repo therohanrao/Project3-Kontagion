@@ -93,7 +93,6 @@ private:
 
     std::list<Actor*>::iterator m_overlapActorIt;
 
-    int m_numActors;
 
     const int m_centerX = VIEW_WIDTH / 2;
     const int m_centerY = VIEW_HEIGHT / 2;
